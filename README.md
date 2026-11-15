@@ -1,19 +1,5 @@
 # Nontonin — Watchlist & Reading Tracker
 
-> **Versi 2.2.0** — perbaikan: frontend sempat tidak jalan sama sekali karena
-> satu import modul yang salah (`renderGrid`); sudah diperbaiki dan diuji
-> ujung-ke-ujung di browser sungguhan (jsdom). Tile kandidat cover kini
-> menampilkan sinopsis + rating seperti versi hosted, peringatan `file://`
-> kini tampil walau file dibuka langsung, dan halaman kosong menjelaskan
-> bahwa data hosted tidak ikut terbawa. Struktur modular v2.1 tetap sama
-> (lihat [Struktur proyek](#struktur-proyek-v220)). Fitur, API, dan bentuk
-> `backend/data/data.json` **tidak berubah** dari v1 — data v1/v2.1 bisa
-> dipindah dengan menyalin file `data.json` saja (lihat
-> [Migrasi dari v1 ke v2](#migrasi-dari-v1-ke-v2)).
-
-> **Catatan nama:** mulai v2.1.0 aplikasi ini bernama **Nontonin** (sebelumnya
-> TontonBaca). Hanya nama yang berubah — fitur, API, dan bentuk data sama.
-
 **Nontonin** adalah aplikasi web lokal untuk menyimpan dan melacak tontonan dan bacaan:
 Anime, Film, Drama, Novel, dan Wattpad — dalam satu tempat.
 
