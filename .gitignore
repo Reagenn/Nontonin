@@ -1,0 +1,4 @@
+node_modules/
+backend/data/data.json
+backend/data/blobs/
+.DS_Store

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nontonin — Watchlist &amp; Reading Tracker</title>
+<link rel="stylesheet" href="/frontend/css/styles.css">
+</head>
+<body>
+<div id="file-warning" class="file-warning" hidden>
+  ⚠️ Kamu membuka file ini langsung dari <code>file://</code>. Aplikasi ini tidak akan menyimpan data dengan cara ini.
+  Jalankan dulu <code>node backend/src/server.js</code> (atau <code>npm start</code>) dari folder proyek,
+  lalu buka <code>http://localhost:3000</code>. Lihat README.md.
+</div>
+<script>
+  // Skrip klasik (bukan module) — sengaja di sini supaya tetap jalan saat
+  // file dibuka via file://, ketika modul ES di bawah tidak bisa dimuat
+  // browser. Kalau dibuka lewat server (http://localhost:3000), peringatan
+  // di atas tetap tersembunyi.
+  if (window.location.protocol === 'file:') {
+    var w = document.getElementById('file-warning');
+    if (w) w.hidden = false;
+  }
+</script>
+<header class="topbar">
+  <div>
+    <h1>📚 Nontonin</h1>
+    <p class="subtitle">Watchlist &amp; Reading Tracker — Anime, Film, Drama, Novel &amp; Wattpad</p>
+  </div>
+  <div class="top-actions">
+    <button id="btn-random" class="btn secondary" type="button">🎲 Bingung mau lanjut apa?</button>
+    <button id="btn-add" class="btn primary" type="button">+ Tambah Judul</button>
+  </div>
+</header>
+<main class="wrap">
+  <section id="stats" class="stats" aria-label="Statistik koleksi"></section>
+  <section class="card">
+    <h2>Tier List Kamu</h2>
+    <p class="muted">Cover dikelompokkan per Tier, dari S sampai D. Klik cover untuk membuka detail.</p>
+    <div id="tier-list" class="tier-list"></div>
+  </section>
+  <section class="card">
+    <h2>Lanjutkan</h2>
+    <div id="continue-list" class="continue-list"></div>
+  </section>
+  <section class="toolbar card">
+    <input id="f-search" type="search" placeholder="Cari judul…" aria-label="Cari judul">
+    <select id="f-category" aria-label="Filter kategori">
+      <option value="">Semua kategori</option><option>Anime</option><option>Film</option><option>Drama</option><option>Novel</option><option>Wattpad</option>
+    </select>
+    <select id="f-status" aria-label="Filter status">
+      <option value="">Semua status</option><option>Berlangsung</option><option>Rencana</option><option>Selesai</option><option>Jeda</option><option>Berhenti</option>
+    </select>
+    <select id="f-sort" aria-label="Urutkan">
+      <option value="newest">Terbaru</option><option value="title">Judul A–Z</option><option value="progress">Progress</option><option value="rating">Rating</option><option value="tier">Tier tertinggi</option>
+    </select>
+  </section>
+  <section>
+    <h2>Daftar Judul <span id="count" class="muted"></span></h2>
+    <div id="grid" class="grid"></div>
+    <div id="empty" class="empty" hidden>
+      <p><b>Koleksimu masih kosong.</b></p>
+      <p>Versi lokal ini sengaja mulai kosong — judul-judul dari versi hosted (web) tidak ikut terbawa ke sini,
+      dan data lokal tidak menimpa data hosted. Klik <b>+ Tambah Judul</b> untuk mengisi list pertamamu.</p>
+      <p class="muted">Sudah punya data dari v1/v2.1? Salin file <code>backend/data/data.json</code> + isi
+      <code>backend/data/blobs/</code> dari folder lamamu ke sini (lihat README: Migrasi), lalu refresh.</p>
+    </div>
+  </section>
+  <section class="card">
+    <h2>Aktivitas 7 Hari Terakhir</h2>
+    <p class="muted">Grafik dihitung dari log aktivitas tersimpan (tambah, edit, centang episode/bab).</p>
+    <div id="chart" class="chart"></div>
+  </section>
+  <section class="card notes">
+    <h2>Catatan sumber cover — jujur</h2>
+    <ul>
+      <li><b>Wattpad tidak punya API pencarian resmi yang berfungsi</b> (dicek: 404). Jadi kategori Wattpad dilayani lewat sumber buku &amp; adaptasi (Open Library, Gutendex, Wikipedia, TVMaze), bukan pencarian langsung ke Wattpad.</li>
+      <li><b>Gutendex</b> pencocokannya longgar (ikut mencocokkan ringkasan buku), jadi hasilnya diurutkan di bawah Open Library.</li>
+      <li>Sumber novel/Wattpad <b>tidak menerbitkan jumlah bab</b>, jadi Total Bab untuk Novel &amp; Wattpad tetap diisi manual.</li>
+      <li>Jumlah episode bisa berbeda antar sumber untuk judul yang sama — angka yang terisi mengikuti kandidat cover yang kamu klik. Cek angka di tile kandidat sebelum mengklik.</li>
+    </ul>
+  </section>
+</main>
+
+<!-- Detail modal -->
+<div id="detail-modal" class="modal" hidden>
+  <div class="modal-box">
+    <button class="close" data-close="detail-modal" type="button" aria-label="Tutup">✕</button>
+    <div id="detail-body"></div>
+  </div>
+</div>
+
+<!-- Add / Edit modal -->
+<div id="form-modal" class="modal" hidden>
+  <div class="modal-box form-box">
+    <button class="close" data-close="form-modal" type="button" aria-label="Tutup">✕</button>
+    <h2 id="form-title">Tambah Judul</h2>
+    <form id="item-form">
+      <div class="field">
+        <label for="in-search">Cari cover &amp; data judul</label>
+        <div class="row">
+          <input id="in-search" type="text" placeholder="cth: Frieren, Inception, Squid Game…" autocomplete="off">
+          <button id="btn-search-cover" class="btn secondary" type="button">Cari</button>
+        </div>
+        <p class="muted" id="cover-hint">Sumber menyesuaikan kategori. Klik salah satu kandidat di bawah untuk mengisi judul, genre, tahun, dan Total Episode/Bab.</p>
+        <div id="cover-results" class="cover-results"></div>
+        <div class="row">
+          <input id="in-cover-url" type="url" placeholder="Atau tempel link gambar cover…">
+          <button id="btn-cover-url" class="btn secondary" type="button">Pakai link</button>
+        </div>
+        <div class="row">
+          <label class="upload">📁 Upload cover <input id="in-cover-file" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden></label>
+          <span id="cover-preview-text" class="muted"></span>
+        </div>
+        <img id="cover-preview" class="cover-preview" alt="" hidden>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="in-title">Judul *</label><input id="in-title" required></div>
+        <div class="field"><label for="in-category">Kategori</label>
+          <select id="in-category"><option>Anime</option><option>Film</option><option>Drama</option><option>Novel</option><option>Wattpad</option></select>
+        </div>
+        <div class="field"><label for="in-genre">Genre</label><input id="in-genre" placeholder="cth: Drama, Action"></div>
+        <div class="field"><label for="in-author">Penulis / Studio</label><input id="in-author"></div>
+        <div class="field"><label for="in-year">Tahun rilis</label><input id="in-year" type="number" min="1900" max="2100" placeholder="cth: 2023"></div>
+        <div class="field"><label for="in-total">Total Episode / Bab</label><input id="in-total" type="number" min="0" placeholder="Otomatis terisi dari hasil pencarian, kalau tersedia"></div>
+        <div class="field"><label for="in-progress">Sudah ditonton / dibaca sampai ke-</label><input id="in-progress" type="number" min="0" value="0"></div>
+        <div class="field"><label for="in-target">Target selesai</label><input id="in-target" type="date"></div>
+        <div class="field"><label for="in-link">Link tempat nonton / baca</label><input id="in-link" type="url" placeholder="https://…"></div>
+        <div class="field"><label for="in-status">Status</label>
+          <select id="in-status"><option>Berlangsung</option><option>Rencana</option><option>Selesai</option><option>Jeda</option><option>Berhenti</option></select>
+        </div>
+        <div class="field"><label for="in-tier">Tier / Rank</label>
+          <select id="in-tier"><option value="">— Tidak ada —</option><option>S</option><option>A</option><option>B</option><option>C</option><option>D</option></select>
+        </div>
+        <div class="field"><label for="in-rating">Rating (0–5)</label><input id="in-rating" type="number" min="0" max="5" step="1" value="0"></div>
+      </div>
+      <div class="field"><label><input id="in-favorite" type="checkbox"> ⭐ Favorit</label></div>
+      <div class="field"><label for="in-notes">Catatan</label><textarea id="in-notes" rows="3" placeholder="Catatan pribadi tentang judul ini…"></textarea></div>
+      <button id="btn-save" class="btn primary big" type="submit">Simpan Judul</button>
+      <div id="delete-section" class="delete-section" hidden>
+        <h3>Hapus judul ini</h3>
+        <p class="warn">⚠️ Hapus permanen: judul beserta checklist episode/bab dan progress-nya akan hilang dan tidak bisa dikembalikan.</p>
+        <button id="btn-delete-1" class="btn danger" type="button">Hapus judul</button>
+        <div id="delete-confirm" hidden>
+          <p><b>Yakin hapus permanen?</b></p>
+          <button id="btn-delete-2" class="btn danger" type="button">Yakin hapus permanen</button>
+          <button id="btn-delete-cancel" class="btn secondary" type="button">Batal hapus</button>
+        </div>
+      </div>
+      <p id="form-error" class="error" hidden></p>
+    </form>
+  </div>
+</div>
+<script type="module" src="/frontend/js/main.js"></script>
+</body>
+</html>
