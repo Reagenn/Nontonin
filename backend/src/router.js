@@ -10,6 +10,7 @@ const { getData } = require('./state');
 const { handleStatic } = require('./routes/static');
 const { handleItems } = require('./routes/items');
 const { handleCovers } = require('./routes/covers');
+const { handleReleases } = require('./routes/releases');
 
 async function handleRequest(req, res) {
   try {
@@ -17,6 +18,7 @@ async function handleRequest(req, res) {
     if (await handleStatic(req, res, url)) return;
     if (await handleItems(req, res, url)) return;
     if (await handleCovers(req, res, url)) return;
+    if (await handleReleases(req, res, url)) return;
     if (req.method === 'GET' && url.pathname === '/api/activity') {
       return sendJson(res, 200, { activity: getData().activity });
     }

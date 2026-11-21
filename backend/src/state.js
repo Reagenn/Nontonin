@@ -63,6 +63,17 @@ function setProgress(item, progress) {
   syncStatus(item);
 }
 
+function cleanExternalRefs(input, existing) {
+  const raw = input === undefined ? (existing || {}) : input;
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  const refs = {};
+  const tvmaze = Number(raw.tvmaze);
+  const shikimori = Number(raw.shikimori);
+  if (Number.isInteger(tvmaze) && tvmaze > 0) refs.tvmaze = tvmaze;
+  if (Number.isInteger(shikimori) && shikimori > 0) refs.shikimori = shikimori;
+  return refs;
+}
+
 function cleanItem(input, existing) {
   const it = existing || {};
   const title = String(input.title || it.title || '').trim();
@@ -89,6 +100,7 @@ function cleanItem(input, existing) {
     checked: Array.isArray(input.checked) ? input.checked.filter(n => Number.isInteger(n) && n >= 1) : (it.checked || []),
     coverUrl: String(input.coverUrl ?? it.coverUrl ?? ''),
     coverSource: String(input.coverSource ?? it.coverSource ?? ''),
+    externalRefs: cleanExternalRefs(input.externalRefs, it.externalRefs),
     createdAt: it.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -108,4 +120,4 @@ function cleanItem(input, existing) {
   return out;
 }
 
-module.exports = { getData, loadData, saveData, logActivity, checkedCount, syncStatus, setProgress, cleanItem };
+module.exports = { getData, loadData, saveData, logActivity, checkedCount, syncStatus, setProgress, cleanExternalRefs, cleanItem };
