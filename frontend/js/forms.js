@@ -5,6 +5,11 @@ import { $, esc, showModal, hideModal } from './utils.js';
 import { api } from './api.js';
 import { state, applyCandidate } from './state.js';
 import { render, loadActivityOnly } from './render.js';
+import { loadReleaseCalendar } from './releases.js';
+
+function normalizedTitle(value) {
+  return String(value || '').normalize('NFKD').replace(/\p{M}+/gu, '').toLowerCase().replace(/['’]/g, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+}
 
 export function updateCoverHint() {
   const cat = $('#in-category').value;
@@ -21,6 +26,9 @@ export function updateCoverHint() {
 export function openForm(item) {
   state.editingId = item ? item.id : null;
   state.autoFilled = null; state.coverUrl = item ? item.coverUrl : ''; state.coverSource = item ? item.coverSource : '';
+  state.externalRefs = item ? { ...(item.externalRefs || {}) } : {};
+  state.externalRefTitle = item ? item.title : '';
+  state.externalRefCategory = item ? item.category : 'Anime';
   $('#form-title').textContent = item ? 'Edit Judul' : 'Tambah Judul';
   $('#btn-save').textContent = item ? 'Simpan Perubahan' : 'Simpan Judul';
   $('#delete-section').hidden = !item;
@@ -99,6 +107,11 @@ export async function selectCandidate(c, el) {
   if (fields.totalUnits !== undefined) $('#in-total').value = fields.totalUnits;
   if (fields.author !== undefined) $('#in-author').value = fields.author;
   state.autoFilled = { ...state.autoFilled, ...fields };
+  const selectedTitle = $('#in-title').value.trim();
+  const refMatchesTitle = fields.title !== undefined || normalizedTitle(selectedTitle) === normalizedTitle(c.title);
+  state.externalRefs = refMatchesTitle ? { ...(c.externalRefs || {}) } : {};
+  state.externalRefTitle = selectedTitle;
+  state.externalRefCategory = $('#in-category').value;
   // Cover: download & store inside the app (blob), then preview.
   try {
     const r = await api('/api/cover-download', { method: 'POST', body: JSON.stringify({ url: c.imageUrl }) });
@@ -126,6 +139,9 @@ export async function saveForm(e) {
     rating: Number($('#in-rating').value) || 0, favorite: $('#in-favorite').checked,
     notes: $('#in-notes').value, coverUrl: state.coverUrl, coverSource: state.coverSource,
   };
+  const refsStillMatch = normalizedTitle(payload.title) === normalizedTitle(state.externalRefTitle)
+    && payload.category === state.externalRefCategory;
+  payload.externalRefs = refsStillMatch ? state.externalRefs : {};
   if (!payload.title) { err.textContent = 'Judul wajib diisi.'; err.hidden = false; return; }
   const btn = $('#btn-save'); btn.disabled = true;
   try {
@@ -139,6 +155,7 @@ export async function saveForm(e) {
     }
     hideModal('form-modal'); hideModal('detail-modal');
     await loadActivityOnly(); render();
+    loadReleaseCalendar(true);
   } catch (e2) { err.textContent = e2.message; err.hidden = false; }
   finally { btn.disabled = false; }
 }
@@ -151,6 +168,7 @@ export async function deleteCurrent() {
     state.items = state.items.filter(x => x.id !== state.editingId);
     hideModal('form-modal'); hideModal('detail-modal');
     await loadActivityOnly(); render();
+    loadReleaseCalendar(true);
   } catch (e) { const err = $('#form-error'); err.textContent = e.message; err.hidden = false; }
   finally { btn.disabled = false; }
 }

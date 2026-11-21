@@ -34,6 +34,19 @@
 </header>
 <main class="wrap">
   <section id="stats" class="stats" aria-label="Statistik koleksi"></section>
+  <section class="card release-card" aria-labelledby="release-title">
+    <div class="release-header">
+      <div>
+        <p class="release-kicker">Jadwal koleksimu</p>
+        <h2 id="release-title">Kalender Rilis</h2>
+        <p class="muted">Episode berikutnya untuk Anime dan Drama tersimpan, dari TVMaze dan Shikimori.</p>
+      </div>
+      <button id="btn-refresh-releases" class="btn secondary" type="button">Perbarui jadwal</button>
+    </div>
+    <div id="release-status" class="release-summary" aria-live="polite"></div>
+    <div id="release-calendar-list" aria-busy="false"></div>
+    <p class="release-attribution muted">Data jadwal: <a href="https://www.tvmaze.com" target="_blank" rel="noopener">TVMaze</a> dan <a href="https://shikimori.one" target="_blank" rel="noopener">Shikimori</a>. Waktu ditampilkan mengikuti zona waktu perangkatmu.</p>
+  </section>
   <section class="card">
     <h2>Tier List Kamu</h2>
     <p class="muted">Cover dikelompokkan per Tier, dari S sampai D. Klik cover untuk membuka detail.</p>

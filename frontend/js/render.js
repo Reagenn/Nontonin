@@ -8,9 +8,10 @@ import { api } from './api.js';
 import { state } from './state.js';
 import { renderStats, renderTierList, renderContinue, renderChart } from './render-dashboard.js';
 import { renderGrid } from './render-items.js';
+import { renderReleaseCalendar, loadReleaseCalendar } from './releases.js';
 
 export function render() {
-  renderStats(); renderTierList(); renderContinue(); renderGrid(); renderChart();
+  renderStats(); renderTierList(); renderContinue(); renderGrid(); renderChart(); renderReleaseCalendar();
 }
 
 export async function loadActivityOnly() {
@@ -22,4 +23,5 @@ export async function loadAll() {
   state.items = itemsRes.items || [];
   state.activity = actRes.activity || [];
   render();
+  await loadReleaseCalendar();
 }
