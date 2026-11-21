@@ -34,6 +34,16 @@ sendiri, bukan di server orang lain.
 - **Dashboard:** statistik koleksi (total judul, episode/bab selesai, rating
   rata-rata — semuanya dihitung dari data tersimpan), grafik aktivitas 7 hari,
   bagian **“Lanjutkan”**, dan pemilih acak **“Bingung mau lanjut apa?”**.
+- **Kalender rilis personal:** menampilkan episode berikutnya untuk Anime dan
+  Drama yang tersimpan, dikelompokkan menurut tanggal dan jam lokal. Jadwal
+  anime diprioritaskan dari Shikimori, sedangkan TVMaze menangani drama dan
+  menjadi fallback. Hasil disimpan dalam cache 15 menit agar API publik tidak
+  dipanggil berlebihan.
+- **Pengingat episode:** pilih pengingat saat tayang, 15 menit, 1 jam, 1 hari,
+  atau 7 hari sebelumnya. Pilihan tersimpan bersama item dan notifikasi browser
+  tidak dikirim berulang untuk episode yang sama. Karena aplikasi ini lokal
+  tanpa layanan push, halaman Nontonin harus tetap terbuka agar notifikasi
+  browser dapat dipicu.
 - **Filter & pencarian:** filter kategori/status, pencarian judul, dan
   pengurutan (terbaru, judul, progress, rating, Tier).
 - **Catatan, rating bintang, favorit, penulis/studio, tahun, target selesai,**
@@ -69,7 +79,7 @@ dan data lokal tidak menimpa data hosted.
 Cek dari yang paling sering terjadi:
 
 1. **Server belum jalan.** Pastikan terminal masih menampilkan
-   `Nontonin v2.2.0 jalan di http://localhost:3000`, lalu refresh browser.
+   `Nontonin v2.3.0 jalan di http://localhost:3000`, lalu refresh browser.
    Kalau terminal sudah ditutup, jalankan lagi `node backend/src/server.js`.
 2. **Membuka file langsung (file://).** Jangan klik ganda `index.html` —
    halaman akan menampilkan peringatan merah di atas. Jalankan server dulu
@@ -84,6 +94,12 @@ Cek dari yang paling sering terjadi:
    (`Ctrl+Shift+R` / `Cmd+Shift+R`). Kalau masih kosong, lihat pesan error di
    terminal server.
 
+Untuk menjalankan unit test kalender rilis dan validasi pengingat:
+
+```bash
+npm test
+```
+
 ## Teknologi
 
 - **Node.js tanpa dependensi npm** — server HTTP bawaan Node (`http`, `fs`,
@@ -94,8 +110,11 @@ Cek dari yang paling sering terjadi:
   `backend/data/blobs/`.
 - **Sumber cover:** API publik Kitsu, Shikimori, TVMaze, Cinemeta,
   Open Library, Gutendex, dan Wikipedia (tidak butuh API key).
+- **Sumber jadwal:** TVMaze dan Shikimori (tidak butuh API key), dengan
+  pencocokan berdasarkan ID sumber bila tersedia atau judul + tahun untuk data
+  lama.
 
-## Struktur proyek (v2.2.0)
+## Struktur proyek (v2.3.0)
 
 Kode sengaja dipecah per tanggung jawab, bukan menumpuk di satu file —
 supaya gampang dibaca dan direview (mis. buat porto GitHub). Backend di
@@ -106,7 +125,7 @@ di `frontend/js/` (entry `frontend/js/main.js`, CSS di
 
 ```
 nontonin-local/
-├── package.json                 # name: nontonin, versi 2.2.0
+├── package.json                 # name: nontonin, versi 2.3.0
 ├── README.md  LICENSE  .gitignore
 ├── backend/
 │   ├── data/
@@ -119,6 +138,8 @@ nontonin-local/
 │       ├── http.js              # response JSON, body, fetch, file statis
 │       ├── router.js            # peta rute -> modul routes/
 │       ├── coverSources.js      # orkestrator cari cover (paralel + round-robin)
+│       ├── releaseCalendar.js   # cache + prioritas kalender lintas sumber
+│       ├── releaseProviders.js  # adapter jadwal TVMaze dan Shikimori
 │       ├── covers.js            # unduh & simpan cover sebagai blob
 │       ├── sources/             # satu file per sumber cover
 │       │   ├── kitsu.js  shikimori.js  tvmaze.js  cinemeta.js
@@ -126,6 +147,7 @@ nontonin-local/
 │       └── routes/              # satu file per kelompok endpoint
 │           ├── items.js         # CRUD items + toggle checklist
 │           ├── covers.js        # search-cover, cover-download, cover-upload
+│           ├── releases.js      # episode berikutnya untuk koleksi tersimpan
 │           └── static.js        # index.html, /frontend/*, /blobs/*
 └── frontend/
     ├── index.html               # <script type="module" src="/frontend/js/main.js">
@@ -140,19 +162,21 @@ nontonin-local/
         ├── render-dashboard.js  # statistik, Tier List, Lanjutkan, grafik
         ├── render-items.js      # kartu judul, filter, pencarian, urutan
         ├── render-detail.js     # panel detail, checklist, tombol Tier
+        ├── releases.js          # kalender, pengingat, notifikasi browser
         └── forms.js             # form Tambah/Edit, cari cover, hapus
 ```
 
-## Migrasi dari v1/v2.1 ke v2.2
+## Migrasi dari v1/v2.1/v2.2 ke v2.3
 
-API dan bentuk `backend/data/data.json` **tidak berubah** — v2.2 membaca
-data v1/v2.1 apa adanya. Untuk pindah:
+Data lama tetap kompatibel. v2.3 hanya menambah field opsional
+`externalRefs` dan `releaseReminderMinutes` saat item disimpan kembali; data
+v1/v2.1/v2.2 dibaca apa adanya. Untuk pindah:
 
-1. Salin file `backend/data/data.json` dari folder v1/v2.1 ke
-   `backend/data/data.json` di folder v2.2 (timpa file kosong bawaan v2.2).
+1. Salin file `backend/data/data.json` dari folder versi lama ke
+   `backend/data/data.json` di folder v2.3 (timpa file kosong bawaan v2.3).
 2. Kalau ada cover tersimpan, salin juga isi folder
-   `backend/data/blobs/` dari folder lama ke v2.2.
-3. Jalankan v2.2 seperti biasa (`node backend/src/server.js`).
+   `backend/data/blobs/` dari folder lama ke v2.3.
+3. Jalankan v2.3 seperti biasa (`node backend/src/server.js`).
 
 ⚠️ Jangan lakukan sebaliknya — jangan menimpa `data.json` lama yang berisi
 datamu dengan file kosong dari ZIP.
@@ -169,6 +193,11 @@ datamu dengan file kosong dari ZIP.
 - Jumlah episode bisa berbeda antar sumber untuk judul yang sama; angka yang
   terisi mengikuti kandidat cover yang diklik (cek angka di tile kandidat
   sebelum mengklik, mis. “22 episode”).
+- Kalender hanya memeriksa kategori Anime dan Drama. Jadwal tidak akan muncul
+  bila TVMaze/Shikimori belum mengumumkan episode berikutnya atau judul lama
+  tidak dapat dicocokkan dengan cukup yakin.
+- Notifikasi browser bukan layanan push: aplikasi dan halaman browser harus
+  tetap terbuka. Izin notifikasi juga dapat diblokir oleh pengaturan browser.
 
 ## Lisensi
 

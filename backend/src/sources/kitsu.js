@@ -8,7 +8,7 @@ const { yearOf, shortText } = require('./helpers');
 
 async function srcKitsu(q) {
   const j = await fetchJson('https://kitsu.io/api/edge/anime?filter[text]=' + encodeURIComponent(q) + '&page[limit]=5',
-    { headers: { Accept: 'application/vnd.api+json', 'User-Agent': 'Nontonin/1.0' } }, 9000);
+    { headers: { Accept: 'application/vnd.api+json', 'User-Agent': 'Nontonin/2.3.0 (https://github.com/Reagenn/Nontonin)' } }, 9000);
   return (j.data || []).map(a => {
     const at = a.attributes || {};
     const img = (at.posterImage && (at.posterImage.original || at.posterImage.large || at.posterImage.medium)) || null;

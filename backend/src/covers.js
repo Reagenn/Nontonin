@@ -30,7 +30,7 @@ async function storeImageBuffer(buf, ext) {
 }
 
 async function downloadCover(url) {
-  const r = await fetchTimeout(url, { headers: { 'User-Agent': 'Nontonin/1.0', Accept: 'image/*' } }, 15000);
+  const r = await fetchTimeout(url, { headers: { 'User-Agent': 'Nontonin/2.3.0 (https://github.com/Reagenn/Nontonin)', Accept: 'image/*' } }, 15000);
   if (!r.ok) throw new Error('Cover gagal diunduh (HTTP ' + r.status + ')');
   const ct = r.headers.get('content-type') || '';
   if (ct && !ct.startsWith('image/')) throw new Error('URL itu bukan gambar');
