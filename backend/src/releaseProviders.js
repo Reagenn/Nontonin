@@ -8,7 +8,7 @@ const { fetchTimeout } = require('./http');
 const { yearOf, candidateMatchScore } = require('./sources/helpers');
 
 const USER_AGENT = 'Nontonin/2.3.0 (https://github.com/Reagenn/Nontonin)';
-const MATCH_THRESHOLD = 0.58;
+const MATCH_THRESHOLD = 0.72;
 let nextTVMazeRequestAt = 0;
 
 function wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }

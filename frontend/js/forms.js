@@ -7,8 +7,25 @@ import { state, applyCandidate } from './state.js';
 import { render, loadActivityOnly } from './render.js';
 import { loadReleaseCalendar } from './releases.js';
 
+const EPISODIC_CATEGORIES = new Set(['Anime', 'Drama']);
+
 function normalizedTitle(value) {
   return String(value || '').normalize('NFKD').replace(/\p{M}+/gu, '').toLowerCase().replace(/['’]/g, '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+}
+
+function reminderValue() {
+  const value = $('#in-release-reminder').value;
+  return value === '' ? null : Number(value);
+}
+
+function calendarFieldsChanged(before, after) {
+  const beforeEpisodic = before && EPISODIC_CATEGORIES.has(before.category);
+  const afterEpisodic = after && EPISODIC_CATEGORIES.has(after.category);
+  if (!beforeEpisodic && !afterEpisodic) return false;
+  if (!before || !after || before.category !== after.category) return true;
+  return before.title !== after.title
+    || Number(before.year || 0) !== Number(after.year || 0)
+    || JSON.stringify(before.externalRefs || {}) !== JSON.stringify(after.externalRefs || {});
 }
 
 export function updateCoverHint() {
@@ -21,6 +38,11 @@ export function updateCoverHint() {
     Wattpad: 'Sumber: Open Library, Gutendex, Wikipedia EN & ID, TVMaze (adaptasi). Wattpad tidak punya API pencarian resmi yang berfungsi, jadi dilayani lewat sumber buku & adaptasi.',
   };
   $('#cover-hint').textContent = hints[cat] || '';
+  const episodic = EPISODIC_CATEGORIES.has(cat);
+  $('#in-release-reminder').disabled = !episodic;
+  $('#release-reminder-hint').textContent = episodic
+    ? 'Notifikasi dipicu saat jadwal episode berikutnya tersedia.'
+    : 'Pengingat rilis hanya tersedia untuk Anime dan Drama.';
 }
 
 export function openForm(item) {
@@ -29,6 +51,7 @@ export function openForm(item) {
   state.externalRefs = item ? { ...(item.externalRefs || {}) } : {};
   state.externalRefTitle = item ? item.title : '';
   state.externalRefCategory = item ? item.category : 'Anime';
+  state.formReminderOriginal = item ? (item.releaseReminderMinutes ?? null) : null;
   $('#form-title').textContent = item ? 'Edit Judul' : 'Tambah Judul';
   $('#btn-save').textContent = item ? 'Simpan Perubahan' : 'Simpan Judul';
   $('#delete-section').hidden = !item;
@@ -47,6 +70,8 @@ export function openForm(item) {
   f('in-target').value = item ? item.targetDate || '' : '';
   f('in-link').value = item ? item.link || '' : '';
   f('in-status').value = item ? item.status : 'Berlangsung';
+  f('in-release-reminder').value = item && item.releaseReminderMinutes !== null && item.releaseReminderMinutes !== undefined
+    ? String(item.releaseReminderMinutes) : '';
   f('in-tier').value = item && item.tier ? item.tier : '';
   f('in-rating').value = item ? item.rating || 0 : 0;
   f('in-favorite').checked = item ? !!item.favorite : false;
@@ -128,6 +153,7 @@ export async function saveForm(e) {
   const err = $('#form-error'); err.hidden = true;
   const total = $('#in-total').value === '' ? null : Number($('#in-total').value);
   const progress = Number($('#in-progress').value) || 0;
+  const previousItem = state.editingId ? state.items.find(item => item.id === state.editingId) : null;
   if (total !== null && progress > total) { err.textContent = '“Sudah sampai ke-” tidak boleh melebihi Total Episode/Bab.'; err.hidden = false; return; }
   const payload = {
     title: $('#in-title').value.trim(), category: $('#in-category').value,
@@ -138,40 +164,45 @@ export async function saveForm(e) {
     status: $('#in-status').value, tier: $('#in-tier').value || null,
     rating: Number($('#in-rating').value) || 0, favorite: $('#in-favorite').checked,
     notes: $('#in-notes').value, coverUrl: state.coverUrl, coverSource: state.coverSource,
-    releaseReminderMinutes: state.editingId
-      ? (state.items.find(item => item.id === state.editingId)?.releaseReminderMinutes ?? null)
-      : null,
   };
+  const reminderMinutes = EPISODIC_CATEGORIES.has(payload.category) ? reminderValue() : null;
+  if (!state.editingId || reminderMinutes !== state.formReminderOriginal) {
+    payload.releaseReminderMinutes = reminderMinutes;
+  }
   const refsStillMatch = normalizedTitle(payload.title) === normalizedTitle(state.externalRefTitle)
     && payload.category === state.externalRefCategory;
   payload.externalRefs = refsStillMatch ? state.externalRefs : {};
   if (!payload.title) { err.textContent = 'Judul wajib diisi.'; err.hidden = false; return; }
   const btn = $('#btn-save'); btn.disabled = true;
   try {
+    let savedItem;
     if (state.editingId) {
       const r = await api('/api/items/' + state.editingId, { method: 'PUT', body: JSON.stringify(payload) });
       const idx = state.items.findIndex(x => x.id === state.editingId);
       if (idx >= 0) state.items[idx] = r.item;
+      savedItem = r.item;
     } else {
       const r = await api('/api/items', { method: 'POST', body: JSON.stringify(payload) });
       state.items.unshift(r.item);
+      savedItem = r.item;
     }
     hideModal('form-modal'); hideModal('detail-modal');
     await loadActivityOnly(); render();
-    loadReleaseCalendar(true);
+    if (calendarFieldsChanged(previousItem, savedItem)) loadReleaseCalendar(true);
   } catch (e2) { err.textContent = e2.message; err.hidden = false; }
   finally { btn.disabled = false; }
 }
 
 export async function deleteCurrent() {
   if (!state.editingId) return;
+  const deletedItem = state.items.find(item => item.id === state.editingId);
   const btn = $('#btn-delete-2'); btn.disabled = true;
   try {
     await api('/api/items/' + state.editingId, { method: 'DELETE' });
     state.items = state.items.filter(x => x.id !== state.editingId);
     hideModal('form-modal'); hideModal('detail-modal');
     await loadActivityOnly(); render();
-    loadReleaseCalendar(true);
+    if (deletedItem && EPISODIC_CATEGORIES.has(deletedItem.category)) loadReleaseCalendar(true);
   } catch (e) { const err = $('#form-error'); err.textContent = e.message; err.hidden = false; }
   finally { btn.disabled = false; }
 }

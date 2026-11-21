@@ -41,9 +41,10 @@ sendiri, bukan di server orang lain.
   dipanggil berlebihan.
 - **Pengingat episode:** pilih pengingat saat tayang, 15 menit, 1 jam, 1 hari,
   atau 7 hari sebelumnya. Pilihan tersimpan bersama item dan notifikasi browser
-  tidak dikirim berulang untuk episode yang sama. Karena aplikasi ini lokal
-  tanpa layanan push, halaman Nontonin harus tetap terbuka agar notifikasi
-  browser dapat dipicu.
+  tidak dikirim berulang untuk episode yang sama. Notifikasi memakai service
+  worker pada browser yang mendukungnya, termasuk browser mobile yang kompatibel.
+  Karena aplikasi ini lokal tanpa layanan push, halaman Nontonin harus tetap
+  terbuka agar pemeriksaan jadwal dapat memicu notifikasi.
 - **Filter & pencarian:** filter kategori/status, pencarian judul, dan
   pengurutan (terbaru, judul, progress, rating, Tier).
 - **Catatan, rating bintang, favorit, penulis/studio, tahun, target selesai,**
@@ -151,6 +152,7 @@ nontonin-local/
 │           └── static.js        # index.html, /frontend/*, /blobs/*
 └── frontend/
     ├── index.html               # <script type="module" src="/frontend/js/main.js">
+    ├── sw.js                    # service worker klik notifikasi
     ├── css/
     │   └── styles.css
     └── js/                      # ES modules

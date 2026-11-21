@@ -38,6 +38,13 @@ function titleSimilarity(a, b) {
 function candidateMatchScore(item, names, candidateYear) {
   const aliases = (Array.isArray(names) ? names : [names]).filter(Boolean);
   let score = aliases.reduce((best, name) => Math.max(best, titleSimilarity(item.title, name)), 0);
+  const normalizedTitle = normTitle(item.title);
+  const exactAlias = aliases.some(name => normTitle(name) === normalizedTitle);
+  if (normalizedTitle && !normalizedTitle.includes(' ') && !exactAlias) {
+    const uniqueTokenMatch = normalizedTitle.length >= 6
+      && aliases.some(name => normTitle(name).split(' ').includes(normalizedTitle));
+    score = uniqueTokenMatch ? Math.max(score, 0.6) : Math.min(score, 0.35);
+  }
   const itemYear = Number(item.year) || null;
   const year = Number(candidateYear) || null;
   if (itemYear && year) {

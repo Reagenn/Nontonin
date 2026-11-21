@@ -83,15 +83,17 @@ async function buildReleaseCalendar(items, options = {}) {
 
 async function getReleaseCalendar(items, options = {}) {
   const force = Boolean(options.force);
-  const now = Date.now();
+  const clock = options.clock || Date.now;
+  const build = options.build || buildReleaseCalendar;
+  const now = clock();
   const key = calendarKey(items);
   if (!force && cache && cache.key === key && cache.expiresAt > now) {
     return { ...cache.value, cached: true };
   }
   if (inFlight && inFlight.key === key) return inFlight.promise;
 
-  const promise = buildReleaseCalendar(items, { now }).then(value => {
-    const expiresAt = Date.now() + CACHE_TTL_MS;
+  const promise = build(items, { now }).then(value => {
+    const expiresAt = clock() + CACHE_TTL_MS;
     const complete = { ...value, expiresAt: new Date(expiresAt).toISOString(), cached: false };
     cache = { key, expiresAt, value: complete };
     return complete;

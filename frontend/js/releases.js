@@ -16,6 +16,11 @@ const REMINDER_OPTIONS = [
   ['10080', '7 hari sebelumnya'],
 ];
 let initialized = false;
+let calendarRequestId = 0;
+let serviceWorkerPromise = null;
+let reminderCheckPromise = null;
+const sessionDeliveries = new Set();
+const failedDeliveries = new Map();
 
 function dateKey(value) {
   const date = new Date(value);
@@ -53,8 +58,18 @@ function reminderOptions(selected) {
 }
 
 function notificationPermission() {
-  if (!('Notification' in window)) return 'unsupported';
+  if (!window.isSecureContext || !('Notification' in window)) return 'unsupported';
   return window.Notification.permission;
+}
+
+function notificationRegistration() {
+  if (!('serviceWorker' in navigator)) return Promise.resolve(null);
+  if (!serviceWorkerPromise) {
+    serviceWorkerPromise = navigator.serviceWorker.register('/sw.js')
+      .then(() => navigator.serviceWorker.ready)
+      .catch(() => null);
+  }
+  return serviceWorkerPromise;
 }
 
 function renderNotificationState() {
@@ -80,20 +95,20 @@ function renderEvent(event) {
     ? `<img class="release-event-cover" src="${esc(item.coverUrl)}" alt="Cover ${esc(item.title || event.sourceTitle)}">`
     : '<div class="release-event-cover release-cover-empty" aria-hidden="true"></div>';
   const due = isReminderDue(event, item.releaseReminderMinutes);
-  return `<article class="release-event${due ? ' reminder-due' : ''}">
+  return `<article class="release-event${due ? ' reminder-due' : ''}" data-release-event="${esc(event.id)}">
     <div class="release-time"><b>${esc(time)}</b><span>waktu lokal</span></div>
     ${cover}
     <div class="release-event-body">
-      <button type="button" class="release-title-button" data-open="${esc(event.itemId)}">${esc(item.title || event.sourceTitle)}</button>
+      <button type="button" class="release-title-button" data-open="${esc(event.itemId)}" data-calendar-focus="open:${esc(event.itemId)}">${esc(item.title || event.sourceTitle)}</button>
       <div class="release-episode"><b>${esc(episodeLabel(event))}</b>${event.episodeTitle ? ` <span>${esc(event.episodeTitle)}</span>` : ''}</div>
       <div class="release-meta">
-        <span class="release-countdown">${esc(relativeTime(event.releaseAt))}</span>
-        <a class="release-source" href="${esc(event.episodeUrl || event.sourceUrl)}" target="_blank" rel="noopener">${esc(event.source)}</a>
-        ${due ? '<span class="release-due">Waktu pengingat tercapai</span>' : ''}
+        <span class="release-countdown" data-release-countdown>${esc(relativeTime(event.releaseAt))}</span>
+        <a class="release-source" href="${esc(event.episodeUrl || event.sourceUrl)}" target="_blank" rel="noopener" data-calendar-focus="source:${esc(event.id)}">${esc(event.source)}</a>
+        <span class="release-due" data-release-due${due ? '' : ' hidden'}>Waktu pengingat tercapai</span>
         ${sourceTitle}
       </div>
       <label class="release-reminder"><span>Pengingat</span>
-        <select data-release-reminder="${esc(event.itemId)}" aria-label="Pengingat untuk ${esc(item.title || event.sourceTitle)}">
+        <select data-release-reminder="${esc(event.itemId)}" data-calendar-focus="reminder:${esc(event.itemId)}" aria-label="Pengingat untuk ${esc(item.title || event.sourceTitle)}">
           ${reminderOptions(item.releaseReminderMinutes)}
         </select>
       </label>
@@ -124,11 +139,29 @@ function emptyMessage(summary) {
   return '<div class="release-empty"><b>Belum ada episode berikutnya yang diumumkan.</b><span>Jadwal akan muncul otomatis setelah tersedia di TVMaze atau Shikimori.</span></div>';
 }
 
+function focusedCalendarControl(list) {
+  const active = document.activeElement;
+  return active && list.contains(active) ? active.dataset.calendarFocus || null : null;
+}
+
+function setCalendarContent(list, html, focusKey) {
+  list.innerHTML = html;
+  focusCalendarControl(list, focusKey);
+}
+
+function focusCalendarControl(list, focusKey) {
+  if (!list || !focusKey) return;
+  const match = [...list.querySelectorAll('[data-calendar-focus]')]
+    .find(element => element.dataset.calendarFocus === focusKey);
+  if (match) match.focus();
+}
+
 export function renderReleaseCalendar() {
   const list = $('#release-calendar-list');
   const status = $('#release-status');
   const button = $('#btn-refresh-releases');
   if (!list || !status || !button) return;
+  const focusKey = focusedCalendarControl(list);
   renderNotificationState();
   list.setAttribute('aria-busy', state.releaseLoading ? 'true' : 'false');
   button.disabled = state.releaseLoading;
@@ -137,17 +170,17 @@ export function renderReleaseCalendar() {
   const calendar = state.releaseCalendar;
   if (state.releaseLoading && !calendar) {
     status.innerHTML = '<span class="release-pill">Menghubungi sumber jadwal</span>';
-    list.innerHTML = '<div class="release-loading"><i></i><i></i><i></i></div>';
+    setCalendarContent(list, '<div class="release-loading"><i></i><i></i><i></i></div>', focusKey);
     return;
   }
   if (state.releaseError && !calendar) {
     status.innerHTML = '<span class="release-pill release-pill-error">Jadwal gagal dimuat</span>';
-    list.innerHTML = `<p class="error">${esc(state.releaseError)}</p>`;
+    setCalendarContent(list, `<p class="error">${esc(state.releaseError)}</p>`, focusKey);
     return;
   }
   if (!calendar) {
     status.innerHTML = '';
-    list.innerHTML = '';
+    setCalendarContent(list, '', focusKey);
     return;
   }
 
@@ -161,23 +194,29 @@ export function renderReleaseCalendar() {
     ? ['Jadwal lama tetap ditampilkan: ' + state.releaseError, ...(calendar.warnings || [])]
     : (calendar.warnings || []);
   const warnings = warningValues.map(value => `<p class="release-warning">${esc(value)}</p>`).join('');
-  list.innerHTML = warnings + (calendar.events && calendar.events.length
+  setCalendarContent(list, warnings + (calendar.events && calendar.events.length
     ? renderGroups(calendar.events)
-    : emptyMessage(summary));
+    : emptyMessage(summary)), focusKey);
 }
 
 export async function loadReleaseCalendar(force = false) {
+  const requestId = ++calendarRequestId;
   state.releaseLoading = true;
   state.releaseError = '';
   renderReleaseCalendar();
   try {
-    state.releaseCalendar = await api('/api/releases' + (force ? '?refresh=1' : ''));
+    const calendar = await api('/api/releases' + (force ? '?refresh=1' : ''));
+    if (requestId !== calendarRequestId) return;
+    state.releaseCalendar = calendar;
   } catch (error) {
+    if (requestId !== calendarRequestId) return;
     state.releaseError = error.message || 'Tidak dapat memuat kalender rilis.';
   } finally {
-    state.releaseLoading = false;
-    renderReleaseCalendar();
-    checkReleaseReminders();
+    if (requestId === calendarRequestId) {
+      state.releaseLoading = false;
+      renderReleaseCalendar();
+      checkReleaseReminders();
+    }
   }
 }
 
@@ -191,39 +230,94 @@ function readDeliveries() {
 function saveDeliveries(deliveries) {
   const cutoff = Date.now() - 30 * 864e5;
   const fresh = Object.fromEntries(Object.entries(deliveries).filter(([, deliveredAt]) => Number(deliveredAt) > cutoff));
-  try { localStorage.setItem(DELIVERY_KEY, JSON.stringify(fresh)); } catch (error) {}
+  try { localStorage.setItem(DELIVERY_KEY, JSON.stringify(fresh)); return true; }
+  catch (error) { return false; }
 }
 
-function checkReleaseReminders() {
+function notificationContent(event, item) {
+  const atRelease = Number(item.releaseReminderMinutes) === 0;
+  const title = atRelease ? item.title + ' tayang sekarang' : item.title + ' segera tayang';
+  const body = episodeLabel(event) + (event.episodeTitle ? ' - ' + event.episodeTitle : '')
+    + (atRelease ? ' sudah tayang.' : ' tayang ' + relativeTime(event.releaseAt) + '.');
+  const options = {
+    body,
+    tag: 'nontonin-' + event.id,
+    data: { url: window.location.origin + '/' },
+  };
+  if (item.coverUrl) options.icon = new URL(item.coverUrl, window.location.origin).href;
+  return { title, options };
+}
+
+async function displayNotification(event, item) {
+  const { title, options } = notificationContent(event, item);
+  const registration = await notificationRegistration();
+  if (registration) {
+    await registration.showNotification(title, options);
+    return;
+  }
+  await new Promise((resolve, reject) => {
+    let notification;
+    try { notification = new window.Notification(title, options); }
+    catch (error) { reject(error); return; }
+    const timeout = window.setTimeout(() => reject(new Error('Notifikasi tidak dikonfirmasi browser')), 5000);
+    notification.onshow = () => { window.clearTimeout(timeout); resolve(); };
+    notification.onerror = () => { window.clearTimeout(timeout); reject(new Error('Browser menolak notifikasi')); };
+    notification.onclick = () => { window.focus(); notification.close(); };
+  });
+}
+
+async function runReminderCheck() {
   if (notificationPermission() !== 'granted' || !state.releaseCalendar) return;
   const deliveries = readDeliveries();
+  let changed = false;
+  let failed = false;
   for (const event of state.releaseCalendar.events || []) {
     const item = state.items.find(value => value.id === event.itemId);
     if (!item || !isReminderDue(event, item.releaseReminderMinutes)) continue;
     const key = event.id + ':' + item.releaseReminderMinutes;
-    if (deliveries[key]) continue;
+    const failedAt = failedDeliveries.get(key) || 0;
+    if (deliveries[key] || sessionDeliveries.has(key)) continue;
+    if (Date.now() - failedAt < 10 * 60000) { failed = true; continue; }
     try {
-      const atRelease = Number(item.releaseReminderMinutes) === 0;
-      const notification = new window.Notification(atRelease ? item.title + ' tayang sekarang' : item.title + ' segera tayang', {
-        body: episodeLabel(event) + (event.episodeTitle ? ' - ' + event.episodeTitle : '') + (atRelease ? ' sudah tayang.' : ' tayang ' + relativeTime(event.releaseAt) + '.'),
-        icon: item.coverUrl ? new URL(item.coverUrl, window.location.origin).href : undefined,
-        tag: 'nontonin-' + event.id,
-      });
-      notification.onclick = () => { window.focus(); notification.close(); };
+      await displayNotification(event, item);
+      failedDeliveries.delete(key);
+      sessionDeliveries.add(key);
       deliveries[key] = Date.now();
+      changed = true;
     } catch (error) {
+      failed = true;
+      failedDeliveries.set(key, Date.now());
       state.reminderNotice = 'Notifikasi gagal ditampilkan: ' + error.message;
       state.reminderNoticeError = true;
       renderNotificationState();
     }
   }
-  saveDeliveries(deliveries);
+  if (changed && !saveDeliveries(deliveries)) {
+    state.reminderNotice = 'Notifikasi terkirim, tetapi riwayat hanya tersimpan untuk sesi ini karena penyimpanan browser diblokir.';
+    state.reminderNoticeError = false;
+    renderNotificationState();
+  } else if (changed && !failed && state.reminderNoticeError
+    && state.reminderNotice.startsWith('Notifikasi gagal ditampilkan:')) {
+    state.reminderNotice = 'Notifikasi pengingat berhasil dikirim.';
+    state.reminderNoticeError = false;
+    renderNotificationState();
+  }
+}
+
+function checkReleaseReminders() {
+  if (reminderCheckPromise) return reminderCheckPromise;
+  reminderCheckPromise = runReminderCheck().finally(() => { reminderCheckPromise = null; });
+  return reminderCheckPromise;
 }
 
 async function requestNotificationPermission() {
   if (notificationPermission() === 'unsupported') return 'unsupported';
   if (window.Notification.permission !== 'default') return window.Notification.permission;
-  try { return await window.Notification.requestPermission(); }
+  try {
+    const permission = await window.Notification.requestPermission();
+    if (permission === 'granted') await notificationRegistration();
+    return permission;
+  }
   catch (error) { return 'error'; }
 }
 
@@ -231,6 +325,7 @@ async function updateReminder(select) {
   const item = state.items.find(value => value.id === select.dataset.releaseReminder);
   if (!item) return;
   const minutes = select.value === '' ? null : Number(select.value);
+  const focusKey = select.dataset.calendarFocus;
   const permissionPromise = minutes === null ? Promise.resolve(notificationPermission()) : requestNotificationPermission();
   select.disabled = true;
   try {
@@ -247,17 +342,20 @@ async function updateReminder(select) {
     else if (permission === 'error') state.reminderNotice = 'Pengingat tersimpan, tetapi izin notifikasi gagal diminta.';
     else state.reminderNotice = 'Pengingat untuk ' + item.title + ' sudah disimpan.';
     renderReleaseCalendar();
+    focusCalendarControl($('#release-calendar-list'), focusKey);
     checkReleaseReminders();
   } catch (error) {
     state.reminderNotice = 'Pengingat gagal disimpan: ' + error.message;
     state.reminderNoticeError = true;
     renderReleaseCalendar();
+    focusCalendarControl($('#release-calendar-list'), focusKey);
   }
 }
 
 export function initReleaseCalendar() {
   if (initialized) return;
   initialized = true;
+  notificationRegistration();
   $('#btn-refresh-releases').addEventListener('click', () => loadReleaseCalendar(true));
   $('#btn-enable-notifications').addEventListener('click', async () => {
     const permission = await requestNotificationPermission();
@@ -275,5 +373,21 @@ export function initReleaseCalendar() {
     if (select) updateReminder(select);
   });
   window.setInterval(() => loadReleaseCalendar(false), 15 * 60 * 1000);
-  window.setInterval(() => { renderReleaseCalendar(); checkReleaseReminders(); }, 60 * 1000);
+  window.setInterval(() => { refreshReleaseTimes(); checkReleaseReminders(); }, 60 * 1000);
+}
+
+function refreshReleaseTimes() {
+  if (!state.releaseCalendar) return;
+  const events = new Map((state.releaseCalendar.events || []).map(event => [event.id, event]));
+  document.querySelectorAll('[data-release-event]').forEach(card => {
+    const event = events.get(card.dataset.releaseEvent);
+    if (!event) return;
+    const item = state.items.find(value => value.id === event.itemId) || {};
+    const due = isReminderDue(event, item.releaseReminderMinutes);
+    card.classList.toggle('reminder-due', due);
+    const countdown = card.querySelector('[data-release-countdown]');
+    const dueLabel = card.querySelector('[data-release-due]');
+    if (countdown) countdown.textContent = relativeTime(event.releaseAt);
+    if (dueLabel) dueLabel.hidden = !due;
+  });
 }

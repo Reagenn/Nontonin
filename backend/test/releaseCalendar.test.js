@@ -1,9 +1,10 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { cleanItem, cleanReleaseReminderMinutes } = require('../src/state');
+const { getData, mutateData, cleanItem, cleanReleaseReminderMinutes, createSerializedWriter } = require('../src/state');
 const { titleSimilarity, candidateMatchScore } = require('../src/sources/helpers');
-const { buildReleaseCalendar } = require('../src/releaseCalendar');
+const { MATCH_THRESHOLD } = require('../src/releaseProviders');
+const { CACHE_TTL_MS, buildReleaseCalendar, getReleaseCalendar, resetReleaseCache } = require('../src/releaseCalendar');
 
 const NOW = Date.parse('2026-11-21T12:00:00.000Z');
 
@@ -30,6 +31,81 @@ test('title matching menggabungkan alias dan tahun rilis', () => {
   const exactYear = candidateMatchScore({ title: 'One Piece', year: 1999 }, ['One Piece'], 1999);
   const wrongYear = candidateMatchScore({ title: 'One Piece', year: 1999 }, ['One Piece'], 2023);
   assert.ok(exactYear > wrongYear);
+  assert.ok(candidateMatchScore({ title: 'Love', year: 2026 }, ['Love Island'], 2026) < MATCH_THRESHOLD);
+  assert.ok(candidateMatchScore({ title: 'Frieren', year: 2023 }, ["Frieren: Beyond Journey's End"], 2023) >= MATCH_THRESHOLD);
+});
+
+test('penulisan snapshot berjalan serial dan mempertahankan urutan terbaru', async () => {
+  const writes = [];
+  let active = 0;
+  let maxActive = 0;
+  const write = createSerializedWriter(async value => {
+    active += 1;
+    maxActive = Math.max(maxActive, active);
+    await new Promise(resolve => setTimeout(resolve, value === 'awal' ? 15 : 1));
+    writes.push(value);
+    active -= 1;
+  });
+  await Promise.all([write('awal'), write('tengah'), write('terbaru')]);
+  assert.equal(maxActive, 1);
+  assert.deepEqual(writes, ['awal', 'tengah', 'terbaru']);
+});
+
+test('antrean penulisan tetap berjalan setelah satu snapshot gagal', async () => {
+  const writes = [];
+  const write = createSerializedWriter(async value => {
+    if (value === 'gagal') throw new Error('disk penuh');
+    writes.push(value);
+  });
+  const failed = write('gagal');
+  const recovered = write('pulih');
+  await assert.rejects(failed, /disk penuh/);
+  await recovered;
+  assert.deepEqual(writes, ['pulih']);
+});
+
+test('mutasi state berjalan serial dan rollback saat transaksi gagal', async () => {
+  const original = JSON.parse(JSON.stringify(getData()));
+  await mutateData(data => { data.items = []; data.activity = []; });
+  const first = mutateData(async data => {
+    await new Promise(resolve => setTimeout(resolve, 10));
+    data.items.push({ id: 'awal' });
+  });
+  const second = mutateData(data => { data.items.push({ id: 'terbaru' }); });
+  await Promise.all([first, second]);
+  assert.deepEqual(getData().items.map(item => item.id), ['awal', 'terbaru']);
+  await assert.rejects(mutateData(data => {
+    data.items.push({ id: 'gagal' });
+    throw new Error('batalkan transaksi');
+  }), /batalkan transaksi/);
+  assert.deepEqual(getData().items.map(item => item.id), ['awal', 'terbaru']);
+  await mutateData(data => { data.items = original.items; data.activity = original.activity; });
+});
+
+test('cache kalender menggabungkan request aktif, mendukung force, dan kedaluwarsa', async () => {
+  resetReleaseCache();
+  let now = NOW;
+  let calls = 0;
+  let releaseBuild;
+  const gate = new Promise(resolve => { releaseBuild = resolve; });
+  const result = {
+    events: [], generatedAt: new Date(NOW).toISOString(),
+    summary: { checked: 0, scheduled: 0, noUpcoming: 0, unmatched: 0 },
+    sources: {}, warnings: [],
+  };
+  const build = async () => { calls += 1; await gate; return result; };
+  const first = getReleaseCalendar([], { build, clock: () => now });
+  const concurrent = getReleaseCalendar([], { build, clock: () => now });
+  assert.equal(calls, 1);
+  releaseBuild();
+  await Promise.all([first, concurrent]);
+  assert.equal((await getReleaseCalendar([], { build, clock: () => now })).cached, true);
+  await getReleaseCalendar([], { force: true, build, clock: () => now });
+  assert.equal(calls, 2);
+  now += CACHE_TTL_MS + 1;
+  await getReleaseCalendar([], { build, clock: () => now });
+  assert.equal(calls, 3);
+  resetReleaseCache();
 });
 
 test('cleanItem hanya menyimpan external refs yang valid', () => {

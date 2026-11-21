@@ -3,8 +3,8 @@
  * Nontonin — state & penyimpanan.
  * Memuat/menyimpan backend/data/data.json (bentuk: {"activity":[],"items":[]})
  * dan logika domain item: status otomatis, progress, dan pembersihan input.
- * Bentuk data TIDAK berubah dari v1, supaya data.json v1 bisa dipindah
- * ke v2 dengan menyalin file itu saja.
+ * Field tambahan tetap opsional supaya data.json versi lama dapat dipindah
+ * dengan menyalin file itu saja.
  */
 const crypto = require('crypto');
 const fs = require('fs');
@@ -13,6 +13,29 @@ const path = require('path');
 const { DATA_FILE, CATEGORIES, STATUSES, TIERS, RELEASE_REMINDER_LEADS } = require('./config');
 
 let data = { items: [], activity: [] };
+
+function createSerializedExecutor() {
+  let queue = Promise.resolve();
+  return task => {
+    const pending = queue.catch(() => {}).then(task);
+    queue = pending;
+    return pending;
+  };
+}
+
+function createSerializedWriter(write) {
+  const execute = createSerializedExecutor();
+  return value => execute(() => write(value));
+}
+
+const executeMutation = createSerializedExecutor();
+
+const writeSnapshot = createSerializedWriter(async snapshot => {
+  await fsp.mkdir(path.dirname(DATA_FILE), { recursive: true });
+  const tmp = DATA_FILE + '.tmp';
+  await fsp.writeFile(tmp, snapshot, 'utf8');
+  await fsp.rename(tmp, DATA_FILE);
+});
 
 /** Objek data live (satu-satunya sumber kebenaran di memori). */
 function getData() { return data; }
@@ -30,10 +53,19 @@ async function loadData() {
 }
 
 async function saveData() {
-  await fsp.mkdir(path.dirname(DATA_FILE), { recursive: true });
-  const tmp = DATA_FILE + '.tmp';
-  await fsp.writeFile(tmp, JSON.stringify(data, null, 2), 'utf8');
-  await fsp.rename(tmp, DATA_FILE);
+  const snapshot = JSON.stringify(data, null, 2);
+  await writeSnapshot(snapshot);
+}
+
+function mutateData(task) {
+  return executeMutation(async () => {
+    const previous = JSON.stringify(data);
+    try { return await task(data); }
+    catch (error) {
+      data = JSON.parse(previous);
+      throw error;
+    }
+  });
 }
 
 function logActivity(action, item) {
@@ -128,4 +160,4 @@ function cleanItem(input, existing) {
   return out;
 }
 
-module.exports = { getData, loadData, saveData, logActivity, checkedCount, syncStatus, setProgress, cleanExternalRefs, cleanReleaseReminderMinutes, cleanItem };
+module.exports = { getData, loadData, saveData, mutateData, createSerializedExecutor, createSerializedWriter, logActivity, checkedCount, syncStatus, setProgress, cleanExternalRefs, cleanReleaseReminderMinutes, cleanItem };

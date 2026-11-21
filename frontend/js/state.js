@@ -21,6 +21,7 @@ export const state = {
   externalRefs: {},
   externalRefTitle: '',
   externalRefCategory: '',
+  formReminderOriginal: null,
 };
 
 export function applyCandidate(current, autoFilled, cand) {
