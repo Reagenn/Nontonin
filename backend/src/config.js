@@ -15,5 +15,6 @@ const BLOBS_DIR = path.join(__dirname, '..', 'data', 'blobs');
 const CATEGORIES = ['Anime', 'Film', 'Drama', 'Novel', 'Wattpad'];
 const STATUSES = ['Berlangsung', 'Rencana', 'Selesai', 'Jeda', 'Berhenti'];
 const TIERS = [null, 'S', 'A', 'B', 'C', 'D'];
+const RELEASE_REMINDER_LEADS = [0, 15, 60, 1440, 10080];
 
-module.exports = { PORT, ROOT, FRONTEND_DIR, DATA_FILE, BLOBS_DIR, CATEGORIES, STATUSES, TIERS };
+module.exports = { PORT, ROOT, FRONTEND_DIR, DATA_FILE, BLOBS_DIR, CATEGORIES, STATUSES, TIERS, RELEASE_REMINDER_LEADS };

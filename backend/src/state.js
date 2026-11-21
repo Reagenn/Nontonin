@@ -10,7 +10,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
-const { DATA_FILE, CATEGORIES, STATUSES, TIERS } = require('./config');
+const { DATA_FILE, CATEGORIES, STATUSES, TIERS, RELEASE_REMINDER_LEADS } = require('./config');
 
 let data = { items: [], activity: [] };
 
@@ -74,6 +74,13 @@ function cleanExternalRefs(input, existing) {
   return refs;
 }
 
+function cleanReleaseReminderMinutes(input, existing) {
+  const raw = input === undefined ? existing : input;
+  if (raw === null || raw === '' || raw === false || raw === undefined) return null;
+  const minutes = Number(raw);
+  return RELEASE_REMINDER_LEADS.includes(minutes) ? minutes : null;
+}
+
 function cleanItem(input, existing) {
   const it = existing || {};
   const title = String(input.title || it.title || '').trim();
@@ -101,6 +108,7 @@ function cleanItem(input, existing) {
     coverUrl: String(input.coverUrl ?? it.coverUrl ?? ''),
     coverSource: String(input.coverSource ?? it.coverSource ?? ''),
     externalRefs: cleanExternalRefs(input.externalRefs, it.externalRefs),
+    releaseReminderMinutes: cleanReleaseReminderMinutes(input.releaseReminderMinutes, it.releaseReminderMinutes),
     createdAt: it.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -120,4 +128,4 @@ function cleanItem(input, existing) {
   return out;
 }
 
-module.exports = { getData, loadData, saveData, logActivity, checkedCount, syncStatus, setProgress, cleanExternalRefs, cleanItem };
+module.exports = { getData, loadData, saveData, logActivity, checkedCount, syncStatus, setProgress, cleanExternalRefs, cleanReleaseReminderMinutes, cleanItem };

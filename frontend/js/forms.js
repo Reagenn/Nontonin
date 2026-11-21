@@ -138,6 +138,9 @@ export async function saveForm(e) {
     status: $('#in-status').value, tier: $('#in-tier').value || null,
     rating: Number($('#in-rating').value) || 0, favorite: $('#in-favorite').checked,
     notes: $('#in-notes').value, coverUrl: state.coverUrl, coverSource: state.coverSource,
+    releaseReminderMinutes: state.editingId
+      ? (state.items.find(item => item.id === state.editingId)?.releaseReminderMinutes ?? null)
+      : null,
   };
   const refsStillMatch = normalizedTitle(payload.title) === normalizedTitle(state.externalRefTitle)
     && payload.category === state.externalRefCategory;

@@ -41,10 +41,14 @@
         <h2 id="release-title">Kalender Rilis</h2>
         <p class="muted">Episode berikutnya untuk Anime dan Drama tersimpan, dari TVMaze dan Shikimori.</p>
       </div>
-      <button id="btn-refresh-releases" class="btn secondary" type="button">Perbarui jadwal</button>
+      <div class="release-actions">
+        <button id="btn-enable-notifications" class="btn secondary" type="button">Aktifkan notifikasi</button>
+        <button id="btn-refresh-releases" class="btn secondary" type="button">Perbarui jadwal</button>
+      </div>
     </div>
     <div id="release-status" class="release-summary" aria-live="polite"></div>
     <div id="release-calendar-list" aria-busy="false"></div>
+    <p id="release-reminder-status" class="release-reminder-status muted" aria-live="polite"></p>
     <p class="release-attribution muted">Data jadwal: <a href="https://www.tvmaze.com" target="_blank" rel="noopener">TVMaze</a> dan <a href="https://shikimori.one" target="_blank" rel="noopener">Shikimori</a>. Waktu ditampilkan mengikuti zona waktu perangkatmu.</p>
   </section>
   <section class="card">

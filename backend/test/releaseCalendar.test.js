@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { cleanItem } = require('../src/state');
+const { cleanItem, cleanReleaseReminderMinutes } = require('../src/state');
 const { titleSimilarity, candidateMatchScore } = require('../src/sources/helpers');
 const { buildReleaseCalendar } = require('../src/releaseCalendar');
 
@@ -37,6 +37,16 @@ test('cleanItem hanya menyimpan external refs yang valid', () => {
   assert.deepEqual(item.externalRefs, { tvmaze: 42, shikimori: 21 });
   const updated = cleanItem({ title: 'Contoh baru' }, item);
   assert.deepEqual(updated.externalRefs, item.externalRefs);
+});
+
+test('pengingat menerima pilihan yang didukung dan mempertahankan nilai lama', () => {
+  assert.equal(cleanReleaseReminderMinutes(60, null), 60);
+  assert.equal(cleanReleaseReminderMinutes(0, null), 0);
+  assert.equal(cleanReleaseReminderMinutes(7, 60), null);
+  assert.equal(cleanReleaseReminderMinutes(undefined, 1440), 1440);
+  const item = cleanItem({ title: 'Pengingat', releaseReminderMinutes: 15 });
+  assert.equal(item.releaseReminderMinutes, 15);
+  assert.equal(cleanItem({ title: 'Pengingat baru' }, item).releaseReminderMinutes, 15);
 });
 
 test('kalender memprioritaskan Shikimori untuk anime dan TVMaze untuk drama', async () => {

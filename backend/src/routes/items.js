@@ -7,11 +7,12 @@
  *   PUT    /api/items/:id        -> { item }
  *   DELETE /api/items/:id        -> { ok: true }
  *   POST   /api/items/:id/toggle -> { item }   (body: { unit })
+ *   PUT    /api/items/:id/reminder -> { item } (body: { minutesBefore })
  */
 const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
-const { BLOBS_DIR } = require('../config');
+const { BLOBS_DIR, RELEASE_REMINDER_LEADS } = require('../config');
 const { sendJson, readBody } = require('../http');
 const { getData, saveData, logActivity, cleanItem, syncStatus } = require('../state');
 
@@ -74,11 +75,33 @@ async function toggleUnit(req, res, id) {
   return sendJson(res, 200, { item });
 }
 
+async function setReleaseReminder(req, res, id) {
+  const item = getData().items.find(x => x.id === id);
+  if (!item) return sendJson(res, 404, { error: 'Judul tidak ditemukan' });
+  const body = JSON.parse(await readBody(req) || '{}');
+  const raw = body.minutesBefore;
+  const disabled = raw === null || raw === '';
+  const validType = typeof raw === 'number' || (typeof raw === 'string' && raw.trim() !== '');
+  const minutes = disabled ? null : Number(raw);
+  if (!disabled && (!validType || !RELEASE_REMINDER_LEADS.includes(minutes))) {
+    return sendJson(res, 400, { error: 'Waktu pengingat tidak valid' });
+  }
+  item.releaseReminderMinutes = minutes;
+  item.updatedAt = new Date().toISOString();
+  await saveData();
+  return sendJson(res, 200, { item });
+}
+
 /** Dispatch semua rute /api/items*. Mengembalikan true bila rute ditangani. */
 async function handleItems(req, res, url) {
   const p = url.pathname;
   if (req.method === 'GET' && p === '/api/items') { await listItems(req, res); return true; }
   if (req.method === 'POST' && p === '/api/items') { await createItem(req, res); return true; }
+  const reminderMatch = p.match(/^\/api\/items\/([^/]+)\/reminder$/);
+  if (req.method === 'PUT' && reminderMatch) {
+    await setReleaseReminder(req, res, decodeURIComponent(reminderMatch[1]));
+    return true;
+  }
   const idMatch = p.match(/^\/api\/items\/([^/]+)(\/toggle)?$/);
   if (idMatch) {
     const id = decodeURIComponent(idMatch[1]);
@@ -89,4 +112,4 @@ async function handleItems(req, res, url) {
   return false;
 }
 
-module.exports = { handleItems, listItems, createItem, updateItem, deleteItem, toggleUnit };
+module.exports = { handleItems, listItems, createItem, updateItem, deleteItem, toggleUnit, setReleaseReminder };

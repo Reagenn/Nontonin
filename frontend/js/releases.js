@@ -6,6 +6,15 @@ import { state } from './state.js';
 
 const dayFormat = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 const timeFormat = new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit' });
+const DELIVERY_KEY = 'nontonin-release-notification-deliveries';
+const REMINDER_OPTIONS = [
+  ['', 'Nonaktif'],
+  ['0', 'Saat tayang'],
+  ['15', '15 menit sebelumnya'],
+  ['60', '1 jam sebelumnya'],
+  ['1440', '1 hari sebelumnya'],
+  ['10080', '7 hari sebelumnya'],
+];
 let initialized = false;
 
 function dateKey(value) {
@@ -30,6 +39,37 @@ function episodeLabel(event) {
   return 'Episode berikutnya';
 }
 
+function isReminderDue(event, minutes, now = Date.now()) {
+  if (minutes === null || minutes === undefined) return false;
+  const releaseAt = new Date(event.releaseAt).getTime();
+  if (!Number.isFinite(releaseAt)) return false;
+  const notifyAt = releaseAt - Number(minutes) * 60000;
+  return now >= notifyAt && now <= releaseAt + 15 * 60000;
+}
+
+function reminderOptions(selected) {
+  return REMINDER_OPTIONS.map(([value, label]) =>
+    `<option value="${value}"${String(selected ?? '') === value ? ' selected' : ''}>${label}</option>`).join('');
+}
+
+function notificationPermission() {
+  if (!('Notification' in window)) return 'unsupported';
+  return window.Notification.permission;
+}
+
+function renderNotificationState() {
+  const button = $('#btn-enable-notifications');
+  const notice = $('#release-reminder-status');
+  if (!button || !notice) return;
+  const permission = notificationPermission();
+  if (permission === 'granted') { button.textContent = 'Notifikasi aktif'; button.disabled = true; }
+  else if (permission === 'denied') { button.textContent = 'Notifikasi diblokir'; button.disabled = true; }
+  else if (permission === 'unsupported') { button.textContent = 'Notifikasi tidak didukung'; button.disabled = true; }
+  else { button.textContent = 'Aktifkan notifikasi'; button.disabled = false; }
+  notice.textContent = state.reminderNotice || 'Pengingat tersimpan per judul. Notifikasi browser dipicu selama halaman Nontonin terbuka.';
+  notice.classList.toggle('error', state.reminderNoticeError);
+}
+
 function renderEvent(event) {
   const item = state.items.find(value => value.id === event.itemId) || {};
   const date = new Date(event.releaseAt);
@@ -39,7 +79,8 @@ function renderEvent(event) {
   const cover = item.coverUrl
     ? `<img class="release-event-cover" src="${esc(item.coverUrl)}" alt="Cover ${esc(item.title || event.sourceTitle)}">`
     : '<div class="release-event-cover release-cover-empty" aria-hidden="true"></div>';
-  return `<article class="release-event">
+  const due = isReminderDue(event, item.releaseReminderMinutes);
+  return `<article class="release-event${due ? ' reminder-due' : ''}">
     <div class="release-time"><b>${esc(time)}</b><span>waktu lokal</span></div>
     ${cover}
     <div class="release-event-body">
@@ -48,8 +89,14 @@ function renderEvent(event) {
       <div class="release-meta">
         <span class="release-countdown">${esc(relativeTime(event.releaseAt))}</span>
         <a class="release-source" href="${esc(event.episodeUrl || event.sourceUrl)}" target="_blank" rel="noopener">${esc(event.source)}</a>
+        ${due ? '<span class="release-due">Waktu pengingat tercapai</span>' : ''}
         ${sourceTitle}
       </div>
+      <label class="release-reminder"><span>Pengingat</span>
+        <select data-release-reminder="${esc(event.itemId)}" aria-label="Pengingat untuk ${esc(item.title || event.sourceTitle)}">
+          ${reminderOptions(item.releaseReminderMinutes)}
+        </select>
+      </label>
     </div>
   </article>`;
 }
@@ -82,6 +129,7 @@ export function renderReleaseCalendar() {
   const status = $('#release-status');
   const button = $('#btn-refresh-releases');
   if (!list || !status || !button) return;
+  renderNotificationState();
   list.setAttribute('aria-busy', state.releaseLoading ? 'true' : 'false');
   button.disabled = state.releaseLoading;
   button.textContent = state.releaseLoading ? 'Memuat jadwal...' : 'Perbarui jadwal';
@@ -129,6 +177,81 @@ export async function loadReleaseCalendar(force = false) {
   } finally {
     state.releaseLoading = false;
     renderReleaseCalendar();
+    checkReleaseReminders();
+  }
+}
+
+function readDeliveries() {
+  try {
+    const value = JSON.parse(localStorage.getItem(DELIVERY_KEY) || '{}');
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  } catch (error) { return {}; }
+}
+
+function saveDeliveries(deliveries) {
+  const cutoff = Date.now() - 30 * 864e5;
+  const fresh = Object.fromEntries(Object.entries(deliveries).filter(([, deliveredAt]) => Number(deliveredAt) > cutoff));
+  try { localStorage.setItem(DELIVERY_KEY, JSON.stringify(fresh)); } catch (error) {}
+}
+
+function checkReleaseReminders() {
+  if (notificationPermission() !== 'granted' || !state.releaseCalendar) return;
+  const deliveries = readDeliveries();
+  for (const event of state.releaseCalendar.events || []) {
+    const item = state.items.find(value => value.id === event.itemId);
+    if (!item || !isReminderDue(event, item.releaseReminderMinutes)) continue;
+    const key = event.id + ':' + item.releaseReminderMinutes;
+    if (deliveries[key]) continue;
+    try {
+      const atRelease = Number(item.releaseReminderMinutes) === 0;
+      const notification = new window.Notification(atRelease ? item.title + ' tayang sekarang' : item.title + ' segera tayang', {
+        body: episodeLabel(event) + (event.episodeTitle ? ' - ' + event.episodeTitle : '') + (atRelease ? ' sudah tayang.' : ' tayang ' + relativeTime(event.releaseAt) + '.'),
+        icon: item.coverUrl ? new URL(item.coverUrl, window.location.origin).href : undefined,
+        tag: 'nontonin-' + event.id,
+      });
+      notification.onclick = () => { window.focus(); notification.close(); };
+      deliveries[key] = Date.now();
+    } catch (error) {
+      state.reminderNotice = 'Notifikasi gagal ditampilkan: ' + error.message;
+      state.reminderNoticeError = true;
+      renderNotificationState();
+    }
+  }
+  saveDeliveries(deliveries);
+}
+
+async function requestNotificationPermission() {
+  if (notificationPermission() === 'unsupported') return 'unsupported';
+  if (window.Notification.permission !== 'default') return window.Notification.permission;
+  try { return await window.Notification.requestPermission(); }
+  catch (error) { return 'error'; }
+}
+
+async function updateReminder(select) {
+  const item = state.items.find(value => value.id === select.dataset.releaseReminder);
+  if (!item) return;
+  const minutes = select.value === '' ? null : Number(select.value);
+  const permissionPromise = minutes === null ? Promise.resolve(notificationPermission()) : requestNotificationPermission();
+  select.disabled = true;
+  try {
+    const response = await api('/api/items/' + encodeURIComponent(item.id) + '/reminder', {
+      method: 'PUT', body: JSON.stringify({ minutesBefore: minutes }),
+    });
+    const index = state.items.findIndex(value => value.id === item.id);
+    if (index >= 0) state.items[index] = response.item;
+    const permission = await permissionPromise;
+    state.reminderNoticeError = false;
+    if (minutes === null) state.reminderNotice = 'Pengingat untuk ' + item.title + ' dinonaktifkan.';
+    else if (permission === 'denied') state.reminderNotice = 'Pengingat tersimpan, tetapi notifikasi diblokir oleh browser.';
+    else if (permission === 'unsupported') state.reminderNotice = 'Pengingat tersimpan, tetapi browser ini tidak mendukung notifikasi.';
+    else if (permission === 'error') state.reminderNotice = 'Pengingat tersimpan, tetapi izin notifikasi gagal diminta.';
+    else state.reminderNotice = 'Pengingat untuk ' + item.title + ' sudah disimpan.';
+    renderReleaseCalendar();
+    checkReleaseReminders();
+  } catch (error) {
+    state.reminderNotice = 'Pengingat gagal disimpan: ' + error.message;
+    state.reminderNoticeError = true;
+    renderReleaseCalendar();
   }
 }
 
@@ -136,6 +259,21 @@ export function initReleaseCalendar() {
   if (initialized) return;
   initialized = true;
   $('#btn-refresh-releases').addEventListener('click', () => loadReleaseCalendar(true));
+  $('#btn-enable-notifications').addEventListener('click', async () => {
+    const permission = await requestNotificationPermission();
+    state.reminderNoticeError = permission === 'denied' || permission === 'error';
+    state.reminderNotice = permission === 'granted'
+      ? 'Notifikasi browser sudah aktif.'
+      : permission === 'denied' ? 'Notifikasi diblokir. Ubah izin situs di pengaturan browser untuk mengaktifkannya.'
+        : permission === 'unsupported' ? 'Browser ini tidak mendukung notifikasi.'
+          : 'Izin notifikasi gagal diminta oleh browser.';
+    renderNotificationState();
+    checkReleaseReminders();
+  });
+  $('#release-calendar-list').addEventListener('change', event => {
+    const select = event.target.closest('[data-release-reminder]');
+    if (select) updateReminder(select);
+  });
   window.setInterval(() => loadReleaseCalendar(false), 15 * 60 * 1000);
-  window.setInterval(renderReleaseCalendar, 60 * 1000);
+  window.setInterval(() => { renderReleaseCalendar(); checkReleaseReminders(); }, 60 * 1000);
 }

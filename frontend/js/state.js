@@ -12,6 +12,8 @@ export const state = {
   releaseCalendar: null,
   releaseLoading: false,
   releaseError: '',
+  reminderNotice: '',
+  reminderNoticeError: false,
   editingId: null,
   autoFilled: null,
   coverUrl: '',
