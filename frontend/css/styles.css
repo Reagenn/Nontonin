@@ -13,7 +13,7 @@ a{color:#8ab4ff}
 .btn.secondary{background:#232838}
 .btn.danger{background:#b91c1c;border-color:#b91c1c}
 .btn.big{width:100%;padding:12px;font-size:16px;margin-top:8px}
-.btn:disabled{opacity:.55;cursor:wait}
+.btn:disabled{opacity:.55;cursor:not-allowed}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
 .stat{background:#171a21;border:1px solid #2a2f3a;border-radius:12px;padding:14px}
 .stat b{font-size:26px;display:block}
@@ -69,6 +69,7 @@ input[type=checkbox]{width:auto}
 .error{color:#fca5a5}
 .empty{color:#aab0bd;text-align:center;padding:24px}
 .file-warning{background:#7f1d1d;color:#fff;padding:12px 20px;font-size:14px}
+.demo-warning{background:#78350f;color:#fef3c7;padding:12px 20px;font-size:14px}
 .upload{cursor:pointer;border:1px dashed #3a4152;border-radius:8px;padding:9px 12px;display:inline-block}
 .detail-cover{width:180px;max-width:100%;border-radius:12px}
 .release-card{position:relative;overflow:hidden;background:linear-gradient(145deg,#171a21 0%,#151c2b 100%);border-color:#344361}

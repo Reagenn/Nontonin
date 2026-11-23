@@ -1,0 +1,53 @@
+{
+  "readOnly": true,
+  "items": [
+    {
+      "id": "demo-anime",
+      "title": "Contoh Anime",
+      "category": "Anime",
+      "genre": "Adventure, Fantasy",
+      "author": "Studio Demo",
+      "year": 2026,
+      "totalUnits": 12,
+      "currentProgress": 4,
+      "checked": [1, 2, 3, 4],
+      "status": "Berlangsung",
+      "tier": "A",
+      "rating": 4,
+      "favorite": true,
+      "targetDate": "",
+      "link": "",
+      "notes": "Data contoh untuk tampilan Vercel read-only.",
+      "coverUrl": "",
+      "coverSource": "",
+      "externalRefs": {},
+      "releaseReminderMinutes": null,
+      "createdAt": "2026-11-20T08:00:00.000Z",
+      "updatedAt": "2026-11-22T08:00:00.000Z"
+    },
+    {
+      "id": "demo-film",
+      "title": "Contoh Film",
+      "category": "Film",
+      "genre": "Drama",
+      "author": "Sutradara Demo",
+      "year": 2025,
+      "totalUnits": 1,
+      "currentProgress": 1,
+      "checked": [1],
+      "status": "Selesai",
+      "tier": "B",
+      "rating": 5,
+      "favorite": false,
+      "targetDate": "",
+      "link": "",
+      "notes": "Data contoh untuk tampilan Vercel read-only.",
+      "coverUrl": "",
+      "coverSource": "",
+      "externalRefs": {},
+      "releaseReminderMinutes": null,
+      "createdAt": "2026-11-18T08:00:00.000Z",
+      "updatedAt": "2026-11-19T08:00:00.000Z"
+    }
+  ]
+}

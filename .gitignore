@@ -1,4 +1,5 @@
 node_modules/
+.vercel/
 backend/data/data.json
 backend/data/blobs/
 .DS_Store
