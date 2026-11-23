@@ -9,8 +9,9 @@ export function openDetail(id) {
   const it = state.items.find(x => x.id === id); if (!it) return;
   const p = progressOf(it);
   const total = p.total;
+  const disabled = state.readOnly ? ' disabled' : '';
   const checklist = total ? Array.from({ length: total }, (_, i) => i + 1).map(n =>
-    `<button type="button" class="${(it.checked || []).includes(n) ? 'done' : ''}" data-toggle="${it.id}:${n}">${n}</button>`).join('')
+    `<button type="button" class="${(it.checked || []).includes(n) ? 'done' : ''}" data-toggle="${it.id}:${n}"${disabled}>${n}</button>`).join('')
     : '<p class="muted">Isi Total Episode/Bab dulu lewat Edit untuk menampilkan checklist.</p>';
   $('#detail-body').innerHTML = `
     <div class="row" style="align-items:flex-start">
@@ -25,11 +26,11 @@ export function openDetail(id) {
       ${it.notes ? `<p>${esc(it.notes)}</p>` : ''}</div>
     </div>
     <h3>Tier / Rank</h3>
-    <div class="tier-btns">${['S', 'A', 'B', 'C', 'D'].map(t => `<button type="button" class="${it.tier === t ? 'active' : ''}" data-tier="${it.id}:${t}">${t}</button>`).join('')}</div>
-    <p class="muted">Ketuk huruf untuk memberi Tier; ketuk lagi untuk melepas.</p>
+    <div class="tier-btns">${['S', 'A', 'B', 'C', 'D'].map(t => `<button type="button" class="${it.tier === t ? 'active' : ''}" data-tier="${it.id}:${t}"${disabled}>${t}</button>`).join('')}</div>
+    <p class="muted">${state.readOnly ? 'Tier hanya dapat dilihat pada demo Vercel.' : 'Ketuk huruf untuk memberi Tier; ketuk lagi untuk melepas.'}</p>
     <h3>Checklist Episode / Bab</h3>
     <div class="checklist">${checklist}</div>
-    <div class="row"><button class="btn primary" data-edit="${it.id}">Edit</button></div>`;
+    ${state.readOnly ? '' : `<div class="row"><button class="btn primary" data-edit="${it.id}">Edit</button></div>`}`;
   showModal('detail-modal');
 }
 

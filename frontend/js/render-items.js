@@ -24,7 +24,11 @@ export function filteredItems() {
 export function renderGrid() {
   const list = filteredItems();
   $('#count').textContent = `(${list.length})`;
-  $('#empty').hidden = state.items.length > 0;
+  const empty = $('#empty');
+  empty.hidden = state.items.length > 0;
+  if (state.readOnly && !state.items.length) {
+    empty.innerHTML = '<p><b>Demo Vercel tidak memiliki data contoh.</b></p><p>Jalankan Nontonin secara lokal untuk menambah dan menyimpan koleksi.</p>';
+  }
   $('#grid').innerHTML = list.map(it => {
     const p = progressOf(it);
     return `<article class="item-card" data-open="${it.id}">
@@ -34,7 +38,7 @@ export function renderGrid() {
       <div class="muted">${esc(it.genre || '')} ${it.year ? '• ' + it.year : ''}</div>
       <div class="progress"><i style="width:${p.pct}%"></i></div>
       <div class="muted">${p.done}/${p.total || '—'} • ${p.pct}% • ${stars(it.rating)}</div>
-      <div class="row" style="margin-top:8px"><button class="btn secondary" data-edit="${it.id}">Edit</button></div>
+      ${state.readOnly ? '' : `<div class="row" style="margin-top:8px"><button class="btn secondary" data-edit="${it.id}">Edit</button></div>`}
       </div></article>`;
   }).join('');
 }

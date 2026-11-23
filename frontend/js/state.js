@@ -7,6 +7,7 @@
  */
 
 export const state = {
+  readOnly: false,
   items: [],
   activity: [],
   releaseCalendar: null,

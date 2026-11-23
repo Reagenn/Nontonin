@@ -34,7 +34,7 @@ export function renderContinue() {
     const p = progressOf(it);
     return `<div class="row" style="justify-content:space-between;padding:8px 0;border-bottom:1px solid #2a2f3a">
       <span><b>${esc(it.title)}</b> <span class="muted">${esc(it.category)} • ${p.done}/${p.total || '—'} (${p.pct}%)</span></span>
-      <span><button class="btn secondary" data-open="${it.id}">Detail</button> <button class="btn" data-edit="${it.id}">Edit</button></span></div>`;
+      <span><button class="btn secondary" data-open="${it.id}">Detail</button>${state.readOnly ? '' : ` <button class="btn" data-edit="${it.id}">Edit</button>`}</span></div>`;
   }).join('') : '<p class="muted">Belum ada yang sedang berjalan.</p>';
 }
 

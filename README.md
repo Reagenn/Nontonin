@@ -78,6 +78,7 @@ Backend juga mengunduh gambar kandidat terpilih atau URL gambar dari pengguna da
 ## Honest Limitations / Batasan Jujur
 
 - **No accounts or cloud sync:** Data is for one local installation and is not synchronized between devices. / **Tidak ada akun atau sinkronisasi cloud:** Data hanya untuk satu instalasi lokal dan tidak disinkronkan antarperangkat.
+- **The Vercel site is a read-only demo:** Full create, edit, upload, and persistence features require the local Node.js server. / **Situs Vercel adalah demo read-only:** Fitur tambah, edit, upload, dan penyimpanan penuh memerlukan server Node.js lokal.
 - **No streaming or reading content:** Nontonin tracks metadata and links; it does not host films, episodes, novels, or Wattpad chapters. / **Tidak menyediakan konten tontonan atau bacaan:** Nontonin hanya melacak metadata dan tautan; aplikasi tidak meng-host film, episode, novel, atau bab Wattpad.
 - **No background push service:** Release checks run while the page is open; browser notifications require a secure context and permission. / **Tidak ada layanan push latar belakang:** Pemeriksaan rilis berjalan selama halaman terbuka; notifikasi browser memerlukan secure context dan izin.
 - **Limited release coverage:** The calendar checks only Anime and Drama, and it cannot show a date that Shikimori or TVMaze has not published. / **Cakupan rilis terbatas:** Kalender hanya memeriksa Anime dan Drama serta tidak dapat menampilkan tanggal yang belum diterbitkan Shikimori atau TVMaze.

@@ -1,0 +1,23 @@
+{
+  "events": [],
+  "generatedAt": null,
+  "expiresAt": null,
+  "cached": true,
+  "summary": {
+    "checked": 1,
+    "scheduled": 0,
+    "noUpcoming": 1,
+    "unmatched": 0
+  },
+  "sources": {
+    "Shikimori": {
+      "checked": 1,
+      "failed": false
+    },
+    "TVMaze": {
+      "checked": 1,
+      "failed": 0
+    }
+  },
+  "warnings": []
+}

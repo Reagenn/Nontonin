@@ -1,10 +1,25 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "/api/index.js"
+      "source": "/",
+      "destination": "/frontend/index.html"
+    },
+    {
+      "source": "/sw.js",
+      "destination": "/frontend/sw.js"
+    },
+    {
+      "source": "/api/items",
+      "destination": "/frontend/demo/items.json"
+    },
+    {
+      "source": "/api/activity",
+      "destination": "/frontend/demo/activity.json"
+    },
+    {
+      "source": "/api/releases",
+      "destination": "/frontend/demo/releases.json"
     }
   ]
 }
