@@ -1,206 +1,103 @@
-# Nontonin — Watchlist & Reading Tracker
+# Nontonin
 
-**Nontonin** adalah aplikasi web lokal untuk menyimpan dan melacak tontonan dan bacaan:
-Anime, Film, Drama, Novel, dan Wattpad — dalam satu tempat.
+**EN:** Nontonin is a local web app for people who want to track anime, films, dramas, novels, and Wattpad reading in one personal library.<br>
+**ID:** Nontonin adalah aplikasi web lokal untuk pengguna yang ingin melacak anime, film, drama, novel, dan bacaan Wattpad dalam satu koleksi pribadi.
 
-Simpan judul, centang episode/bab yang sudah ditonton atau dibaca, beri Tier,
-dan lihat progress serta statistik koleksimu. Data tersimpan di komputermu
-sendiri, bukan di server orang lain.
+## Features / Fitur
 
-## Fitur
+- **Personal library / Koleksi pribadi:** Store titles in five categories with status, notes, links, year, author or studio, rating, and favorite state. / Simpan judul dalam lima kategori beserta status, catatan, tautan, tahun, penulis atau studio, rating, dan favorit.
+- **Progress tracking / Pelacakan progres:** Record the current episode or chapter and use a numbered checklist when a total is available. / Catat episode atau bab terakhir dan gunakan checklist bernomor ketika jumlah total tersedia.
+- **Cover search / Pencarian cover:** Search supported public sources, paste an image URL, or upload an image; selected covers are stored locally when the download succeeds. / Cari dari sumber publik yang didukung, tempel URL gambar, atau unggah gambar; cover terpilih disimpan secara lokal ketika pengunduhan berhasil.
+- **Organization / Pengelolaan:** Use Tier S-A-B-C-D, search, filters, sorting, collection statistics, and recent activity. / Gunakan Tier S-A-B-C-D, pencarian, filter, pengurutan, statistik koleksi, dan aktivitas terbaru.
+- **Release calendar / Kalender rilis:** Show the next announced episode for saved Anime and Drama titles using Shikimori with TVMaze as the drama source and fallback. / Tampilkan episode berikutnya yang sudah diumumkan untuk Anime dan Drama tersimpan dengan Shikimori serta TVMaze sebagai sumber drama dan fallback.
+- **Release reminders / Pengingat rilis:** Save one reminder per title and show browser notifications while Nontonin is open and notification permission is granted. / Simpan satu pengingat per judul dan tampilkan notifikasi browser selama Nontonin terbuka serta izin notifikasi diberikan.
 
-- **5 kategori:** Anime, Film, Drama, Novel, Wattpad
-- **Checklist episode/bab bernomor** — ketuk untuk centang / batal centang;
-  kolom “Sudah ditonton/dibaca sampai ke-” dan Total Episode/Bab. Status
-  otomatis berubah jadi **Selesai** saat checklist penuh, dan kembali ke
-  **Berlangsung** kalau ada yang dicentang-batal di bawah penuh.
-- **Cari cover dari banyak sumber nyata** (maks. 12 kandidat, berlabel sumber):
-  - Anime: Kitsu, Shikimori, TVMaze, Cinemeta, Wikipedia EN & ID
-  - Film: Cinemeta (poster IMDb), Wikipedia EN & ID
-  - Drama: TVMaze, Cinemeta, Wikipedia EN & ID
-  - Novel & Wattpad: Open Library, Gutendex/Project Gutenberg, Wikipedia EN & ID, TVMaze (adaptasi)
-  - Plus **tempel link cover** dan **upload gambar**. Cover yang dipilih
-    **diunduh dan disimpan di dalam aplikasi** (`backend/data/blobs/`), bukan
-    sekadar link luar.
-  - Klik kandidat cover akan **auto-isi Total Episode/Bab** — hanya saat kolom
-    masih kosong, atau masih sama dengan nilai auto-isi kandidat sebelumnya
-    (aturan snapshot). Jadi mengganti kandidat — mis. dari Vagabond 16 eps ke
-    Love in Disguise 12 eps — akan memperbarui Judul, Genre, Tahun rilis, dan
-    Total. Nilai yang kamu ketik manual tidak pernah ditimpa.
-- **Tier / Rank S, A, B, C, D** per judul — bisa dipilih di form Tambah/Edit
-  maupun lewat tombol huruf berwarna di panel detail (ketuk lagi untuk
-  melepas). Ada badge Tier di kartu judul, bagian **“Tier List Kamu”** yang
-  mengelompokkan cover per Tier, dan opsi urut **“Tier tertinggi”**.
-- **Dashboard:** statistik koleksi (total judul, episode/bab selesai, rating
-  rata-rata — semuanya dihitung dari data tersimpan), grafik aktivitas 7 hari,
-  bagian **“Lanjutkan”**, dan pemilih acak **“Bingung mau lanjut apa?”**.
-- **Kalender rilis personal:** menampilkan episode berikutnya untuk Anime dan
-  Drama yang tersimpan, dikelompokkan menurut tanggal dan jam lokal. Jadwal
-  anime diprioritaskan dari Shikimori, sedangkan TVMaze menangani drama dan
-  menjadi fallback. Hasil disimpan dalam cache 15 menit agar API publik tidak
-  dipanggil berlebihan.
-- **Pengingat episode:** pilih pengingat saat tayang, 15 menit, 1 jam, 1 hari,
-  atau 7 hari sebelumnya. Pilihan tersimpan bersama item dan notifikasi browser
-  tidak dikirim berulang untuk episode yang sama. Notifikasi memakai service
-  worker pada browser yang mendukungnya, termasuk browser mobile yang kompatibel.
-  Karena aplikasi ini lokal tanpa layanan push, halaman Nontonin harus tetap
-  terbuka agar pemeriksaan jadwal dapat memicu notifikasi.
-- **Filter & pencarian:** filter kategori/status, pencarian judul, dan
-  pengurutan (terbaru, judul, progress, rating, Tier).
-- **Catatan, rating bintang, favorit, penulis/studio, tahun, target selesai,**
-  dan link tempat nonton/baca per judul.
-- **Hapus dua langkah:** di form Edit, di bawah tombol Simpan Perubahan, ada
-  bagian “Hapus judul ini” dengan peringatan hapus permanen dan konfirmasi
-  (Hapus judul → Yakin hapus permanen / Batal hapus).
+## Quick Start
 
-## Cara menjalankan
-
-Butuh **Node.js 18+**. Tanpa dependensi npm — tidak perlu `npm install`.
+**EN:** Requires Git and Node.js 18 or newer; the project has no npm dependencies to install.<br>
+**ID:** Membutuhkan Git dan Node.js 18 atau lebih baru; proyek ini tidak memiliki dependensi npm yang perlu dipasang.
 
 ```bash
-node backend/src/server.js
-# atau
+git clone https://github.com/Reagenn/Nontonin.git
+cd Nontonin
 npm start
 ```
 
-Lalu buka **http://localhost:3000** di browser.
+Open `http://localhost:3000`. Do not open `frontend/index.html` through `file://`.<br>
+Buka `http://localhost:3000`. Jangan membuka `frontend/index.html` melalui `file://`.
 
-> ⚠️ Jangan buka `frontend/index.html` langsung dengan klik ganda (file://) —
-> aplikasi tidak akan menyimpan data dengan cara itu. Gunakan langkah di atas.
-> Kalau terlanjur dibuka begitu, halaman akan menampilkan peringatan merah di
-> bagian atas — ikuti petunjuknya.
+## How to Use / Cara Pakai
 
-Data tersimpan di `backend/data/data.json` dan tetap ada setelah server
-di-restart. Aplikasi mulai **kosong** — isi sendiri lewat **+ Tambah Judul**.
-Judul-judul dari versi hosted (web) **tidak ikut terbawa** ke versi lokal ini,
-dan data lokal tidak menimpa data hosted.
+1. **Add a title / Tambah judul:** Select **+ Tambah Judul**, choose a category, then enter metadata manually or select a cover candidate. / Pilih **+ Tambah Judul**, tentukan kategori, lalu isi metadata secara manual atau pilih kandidat cover.
+2. **Track it / Lacak progres:** Update the current episode or chapter, checklist, status, Tier, rating, notes, and optional release reminder. / Perbarui episode atau bab terakhir, checklist, status, Tier, rating, catatan, dan pengingat rilis opsional.
+3. **Review the library / Tinjau koleksi:** Use the dashboard, filters, Tier list, activity chart, and release calendar to review saved data. / Gunakan dashboard, filter, daftar Tier, grafik aktivitas, dan kalender rilis untuk meninjau data tersimpan.
 
-## Kalau aplikasi tidak jalan / halaman kosong
+## Project Structure / Struktur Proyek
 
-Cek dari yang paling sering terjadi:
-
-1. **Server belum jalan.** Pastikan terminal masih menampilkan
-   `Nontonin v2.3.0 jalan di http://localhost:3000`, lalu refresh browser.
-   Kalau terminal sudah ditutup, jalankan lagi `node backend/src/server.js`.
-2. **Membuka file langsung (file://).** Jangan klik ganda `index.html` —
-   halaman akan menampilkan peringatan merah di atas. Jalankan server dulu
-   (lihat Cara menjalankan), lalu buka `http://localhost:3000`.
-3. **Port 3000 sudah dipakai.** Server akan berhenti dengan pesan
-   `Port 3000 sudah dipakai aplikasi lain`. Jalankan dengan port lain:
-   `PORT=3001 node backend/src/server.js`, lalu buka `http://localhost:3001`.
-4. **Node.js belum terinstall / terlalu lama.** Cek dengan `node --version` —
-   butuh Node.js 18+. Kalau belum ada, install dari https://nodejs.org.
-5. **Halaman terbuka tapi kosong tanpa judul.** Pastikan kamu membuka
-   `http://localhost:3000` (bukan `file://`), lalu hard-refresh
-   (`Ctrl+Shift+R` / `Cmd+Shift+R`). Kalau masih kosong, lihat pesan error di
-   terminal server.
-
-Untuk menjalankan unit test kalender rilis dan validasi pengingat:
-
-```bash
-npm test
+```text
+Nontonin/
+|-- backend/
+|   |-- src/
+|   |   |-- server.js          # HTTP server entry / entry server HTTP
+|   |   |-- routes/            # Local API and static routes / API lokal dan rute statis
+|   |   |-- sources/           # Cover-source adapters / adapter sumber cover
+|   |   |-- releaseCalendar.js # Release cache and orchestration / cache dan orkestrasi rilis
+|   |   `-- state.js           # JSON persistence and domain logic / persistensi JSON dan logika domain
+|   `-- data/                  # Local runtime data, ignored by Git / data runtime lokal, diabaikan Git
+|-- frontend/
+|   |-- index.html             # Application shell / kerangka aplikasi
+|   |-- css/                   # Styles / gaya tampilan
+|   |-- js/                    # Browser ES modules / modul ES browser
+|   `-- sw.js                  # Notification service worker / service worker notifikasi
+|-- package.json
+|-- README.md
+`-- LICENSE
 ```
 
-## Teknologi
+The backend uses Node.js built-in modules and stores records in `backend/data/data.json`; the frontend is plain HTML, CSS, and JavaScript with no build step.<br>
+Backend memakai modul bawaan Node.js dan menyimpan data di `backend/data/data.json`; frontend memakai HTML, CSS, dan JavaScript biasa tanpa build step.
 
-- **Node.js tanpa dependensi npm** — server HTTP bawaan Node (`http`, `fs`,
-  `crypto`) dan `fetch` global untuk pencarian cover.
-- **Frontend:** HTML + CSS + JavaScript polos (ES modules, tanpa build step),
-  tanpa framework dan tanpa CDN.
-- **Penyimpanan:** file JSON lokal `backend/data/data.json`; cover di
-  `backend/data/blobs/`.
-- **Sumber cover:** API publik Kitsu, Shikimori, TVMaze, Cinemeta,
-  Open Library, Gutendex, dan Wikipedia (tidak butuh API key).
-- **Sumber jadwal:** TVMaze dan Shikimori (tidak butuh API key), dengan
-  pencocokan berdasarkan ID sumber bila tersedia atau judul + tahun untuk data
-  lama.
+## External Public APIs / API Publik Eksternal
 
-## Struktur proyek (v2.3.0)
+Only the backend contacts the following external endpoints. The frontend `fetch` calls use this app's local `/api/*` routes. No API token, key, or secret is stored in the code.<br>
+Hanya backend yang menghubungi endpoint eksternal berikut. Panggilan `fetch` frontend menggunakan rute lokal `/api/*` milik aplikasi ini. Tidak ada token, key, atau secret API yang disimpan di kode.
 
-Kode sengaja dipecah per tanggung jawab, bukan menumpuk di satu file —
-supaya gampang dibaca dan direview (mis. buat porto GitHub). Backend di
-`backend/src/` (entry `backend/src/server.js`, rute di
-`backend/src/routes/`, sumber cover di `backend/src/sources/`); frontend
-di `frontend/js/` (entry `frontend/js/main.js`, CSS di
-`frontend/css/styles.css`).
+| API | Endpoint used / Endpoint yang dipakai | Purpose / Kegunaan |
+| --- | --- | --- |
+| Kitsu API | `GET https://kitsu.io/api/edge/anime?filter[text]={query}&page[limit]=5` | Anime cover, title, year, synopsis, rating, and episode count. / Cover anime, judul, tahun, sinopsis, rating, dan jumlah episode. |
+| Shikimori API | `GET https://shikimori.one/api/animes?search={query}&limit=5`<br>`POST https://shikimori.one/api/graphql` | Anime cover and metadata; GraphQL supplies `nextEpisodeAt` and aired episode data for the release calendar. / Cover dan metadata anime; GraphQL menyediakan `nextEpisodeAt` dan data episode tayang untuk kalender rilis. |
+| TVMaze API | `GET https://api.tvmaze.com/search/shows?q={query}`<br>`GET https://api.tvmaze.com/shows/{id}/episodes`<br>`GET https://api.tvmaze.com/shows/{id}?embed=nextepisode`<br>`GET {_links.nextepisode.href}` returned by TVMaze | Show search, cover and metadata, episode totals, and the next episode time. / Pencarian serial, cover dan metadata, jumlah episode, serta waktu episode berikutnya. |
+| Cinemeta API | `GET https://v3-cinemeta.strem.io/catalog/{type}/top/search={query}.json`<br>`GET https://v3-cinemeta.strem.io/meta/series/{id}.json` | Film and series posters and metadata; series detail is used to count episodes. / Poster dan metadata film atau serial; detail serial dipakai untuk menghitung episode. |
+| Open Library APIs | `GET https://openlibrary.org/search.json?q={query}&limit=5`<br>`GET https://covers.openlibrary.org/b/id/{coverId}-L.jpg` | Book metadata and cover images for Novel and Wattpad categories. / Metadata buku dan gambar cover untuk kategori Novel dan Wattpad. |
+| Gutendex API | `GET https://gutendex.com/books/?search={query}` | Project Gutenberg book metadata and cover candidates. / Metadata buku Project Gutenberg dan kandidat cover. |
+| Wikipedia APIs (EN and ID) | `GET https://{en,id}.wikipedia.org/w/api.php?action=query&list=search&srsearch={query}&srlimit=3&format=json&origin=*`<br>`GET https://{en,id}.wikipedia.org/api/rest_v1/page/summary/{title}` | Search pages, then read summaries and thumbnails for cover candidates. / Mencari halaman, lalu membaca ringkasan dan thumbnail untuk kandidat cover. |
 
-```
-nontonin-local/
-├── package.json                 # name: nontonin, versi 2.3.0
-├── README.md  LICENSE  .gitignore
-├── backend/
-│   ├── data/
-│   │   ├── data.json            # data kamu (kosong di ZIP; jangan di-commit)
-│   │   └── blobs/               # cover yang diunduh (jangan di-commit)
-│   └── src/
-│       ├── server.js            # entry tipis: load data + start server
-│       ├── config.js            # port, path data, kategori/status/tier
-│       ├── state.js             # baca/tulis data.json + logika item
-│       ├── http.js              # response JSON, body, fetch, file statis
-│       ├── router.js            # peta rute -> modul routes/
-│       ├── coverSources.js      # orkestrator cari cover (paralel + round-robin)
-│       ├── releaseCalendar.js   # cache + prioritas kalender lintas sumber
-│       ├── releaseProviders.js  # adapter jadwal TVMaze dan Shikimori
-│       ├── covers.js            # unduh & simpan cover sebagai blob
-│       ├── sources/             # satu file per sumber cover
-│       │   ├── kitsu.js  shikimori.js  tvmaze.js  cinemeta.js
-│       │   ├── wikipedia.js  openlibrary.js  gutendex.js  helpers.js
-│       └── routes/              # satu file per kelompok endpoint
-│           ├── items.js         # CRUD items + toggle checklist
-│           ├── covers.js        # search-cover, cover-download, cover-upload
-│           ├── releases.js      # episode berikutnya untuk koleksi tersimpan
-│           └── static.js        # index.html, /frontend/*, /blobs/*
-└── frontend/
-    ├── index.html               # <script type="module" src="/frontend/js/main.js">
-    ├── sw.js                    # service worker klik notifikasi
-    ├── css/
-    │   └── styles.css
-    └── js/                      # ES modules
-        ├── main.js              # entry tipis: wiring event + init
-        ├── api.js               # semua fetch ke backend
-        ├── state.js             # state lokal + aturan snapshot auto-fill
-        ├── utils.js             # helper DOM / format
-        ├── render.js            # orkestrator render + loadAll
-        ├── render-dashboard.js  # statistik, Tier List, Lanjutkan, grafik
-        ├── render-items.js      # kartu judul, filter, pencarian, urutan
-        ├── render-detail.js     # panel detail, checklist, tombol Tier
-        ├── releases.js          # kalender, pengingat, notifikasi browser
-        └── forms.js             # form Tambah/Edit, cari cover, hapus
-```
+The backend also downloads the selected candidate image or a user-supplied image URL and stores files up to 10 MB in `backend/data/blobs/`; this is a direct image fetch, not another fixed API.<br>
+Backend juga mengunduh gambar kandidat terpilih atau URL gambar dari pengguna dan menyimpan file hingga 10 MB di `backend/data/blobs/`; ini adalah pengambilan gambar langsung, bukan API tetap lainnya.
 
-## Migrasi dari v1/v2.1/v2.2 ke v2.3
+## Honest Limitations / Batasan Jujur
 
-Data lama tetap kompatibel. v2.3 hanya menambah field opsional
-`externalRefs` dan `releaseReminderMinutes` saat item disimpan kembali; data
-v1/v2.1/v2.2 dibaca apa adanya. Untuk pindah:
+- **No accounts or cloud sync:** Data is for one local installation and is not synchronized between devices. / **Tidak ada akun atau sinkronisasi cloud:** Data hanya untuk satu instalasi lokal dan tidak disinkronkan antarperangkat.
+- **No streaming or reading content:** Nontonin tracks metadata and links; it does not host films, episodes, novels, or Wattpad chapters. / **Tidak menyediakan konten tontonan atau bacaan:** Nontonin hanya melacak metadata dan tautan; aplikasi tidak meng-host film, episode, novel, atau bab Wattpad.
+- **No background push service:** Release checks run while the page is open; browser notifications require a secure context and permission. / **Tidak ada layanan push latar belakang:** Pemeriksaan rilis berjalan selama halaman terbuka; notifikasi browser memerlukan secure context dan izin.
+- **Limited release coverage:** The calendar checks only Anime and Drama, and it cannot show a date that Shikimori or TVMaze has not published. / **Cakupan rilis terbatas:** Kalender hanya memeriksa Anime dan Drama serta tidak dapat menampilkan tanggal yang belum diterbitkan Shikimori atau TVMaze.
+- **External data can be incomplete:** Provider outages, rate limits, ambiguous titles, and different episode counts can produce missing or imperfect matches. / **Data eksternal dapat tidak lengkap:** Gangguan provider, rate limit, judul ambigu, dan perbedaan jumlah episode dapat menghasilkan data yang hilang atau kecocokan yang kurang tepat.
+- **No official Wattpad search:** Wattpad entries use book, Wikipedia, and adaptation sources; book APIs do not provide chapter totals. / **Tidak ada pencarian resmi Wattpad:** Entri Wattpad memakai sumber buku, Wikipedia, dan adaptasi; API buku tidak menyediakan jumlah bab.
 
-1. Salin file `backend/data/data.json` dari folder versi lama ke
-   `backend/data/data.json` di folder v2.3 (timpa file kosong bawaan v2.3).
-2. Kalau ada cover tersimpan, salin juga isi folder
-   `backend/data/blobs/` dari folder lama ke v2.3.
-3. Jalankan v2.3 seperti biasa (`node backend/src/server.js`).
+Back up `backend/data/data.json` and `backend/data/blobs/` yourself when needed. Never commit `.env`, `backend/data/data.json`, or personal cover files.<br>
+Cadangkan sendiri `backend/data/data.json` dan `backend/data/blobs/` bila diperlukan. Jangan commit `.env`, `backend/data/data.json`, atau file cover pribadi.
 
-⚠️ Jangan lakukan sebaliknya — jangan menimpa `data.json` lama yang berisi
-datamu dengan file kosong dari ZIP.
+## Contributing / Kontribusi
 
-## Batasan yang jujur
+1. Fork this repository. / Fork repository ini.
+2. Create a feature branch: `git switch -c feat/nama-fitur`. / Buat branch fitur: `git switch -c feat/nama-fitur`.
+3. Keep one feature in one pull request, run `npm test`, then push the branch. / Batasi satu fitur untuk satu pull request, jalankan `npm test`, lalu push branch.
+4. Open a pull request from your feature branch to `main`. / Buka pull request dari branch fitur ke `main`.
 
-- **Wattpad tidak punya API pencarian resmi yang berfungsi** (dicek: 404).
-  Kategori Wattpad dilayani lewat sumber buku & adaptasi (Open Library,
-  Gutendex, Wikipedia, TVMaze), bukan pencarian langsung ke Wattpad.
-- **Gutendex** pencocokannya longgar (ikut mencocokkan ringkasan buku), jadi
-  hasilnya diurutkan di bawah Open Library.
-- Sumber novel/Wattpad **tidak menerbitkan jumlah bab**, jadi Total Bab untuk
-  Novel & Wattpad tetap diisi manual.
-- Jumlah episode bisa berbeda antar sumber untuk judul yang sama; angka yang
-  terisi mengikuti kandidat cover yang diklik (cek angka di tile kandidat
-  sebelum mengklik, mis. “22 episode”).
-- Kalender hanya memeriksa kategori Anime dan Drama. Jadwal tidak akan muncul
-  bila TVMaze/Shikimori belum mengumumkan episode berikutnya atau judul lama
-  tidak dapat dicocokkan dengan cukup yakin.
-- Notifikasi browser bukan layanan push: aplikasi dan halaman browser harus
-  tetap terbuka. Izin notifikasi juga dapat diblokir oleh pengaturan browser.
+Do not include `.env`, `backend/data/data.json`, or `backend/data/blobs/` in a pull request.<br>
+Jangan sertakan `.env`, `backend/data/data.json`, atau `backend/data/blobs/` dalam pull request.
 
-## Lisensi
+## License / Lisensi
 
-MIT — lihat `LICENSE`.
+Nontonin is licensed under the [MIT License](./LICENSE).<br>
+Nontonin menggunakan [Lisensi MIT](./LICENSE).
