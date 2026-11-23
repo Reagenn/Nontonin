@@ -2,6 +2,7 @@
 /**
  * Nontonin — penyajian file statis.
  *   GET / atau /index.html        -> frontend/index.html
+ *   GET /sw.js                    -> service worker notifikasi
  *   GET /frontend/<path>          -> file di dalam folder frontend/
  *                                     (js/main.js, css/styles.css, ...)
  *   GET /blobs/<file>             -> cover yang tersimpan di data/blobs/
@@ -21,6 +22,10 @@ async function handleStatic(req, res, url) {
   const p = url.pathname;
   if (p === '/' || p === '/index.html') {
     await serveFile(res, path.join(FRONTEND_DIR, 'index.html'));
+    return true;
+  }
+  if (p === '/sw.js') {
+    await serveFile(res, path.join(FRONTEND_DIR, 'sw.js'));
     return true;
   }
   if (p.startsWith('/blobs/')) {

@@ -17,7 +17,7 @@ async function srcTVMaze(q) {
       const eps = await fetchJson('https://api.tvmaze.com/shows/' + s.id + '/episodes', {}, 8000);
       if (Array.isArray(eps)) total = eps.filter(e => (e.season || 0) >= 1).length || eps.length;
     } catch (e) { /* total stays null */ }
-    return { title: s.name, source: 'TVMaze', imageUrl: s.image ? (s.image.original || s.image.medium) : null, year: yearOf(s.premiered), genre: (s.genres || []).join(', '), author: '', totalUnits: total, subtitle: shortText(s.summary), rating: s.rating && s.rating.average ? Number(s.rating.average) : null };
+    return { title: s.name, source: 'TVMaze', imageUrl: s.image ? (s.image.original || s.image.medium) : null, year: yearOf(s.premiered), genre: (s.genres || []).join(', '), author: '', totalUnits: total, subtitle: shortText(s.summary), rating: s.rating && s.rating.average ? Number(s.rating.average) : null, externalRefs: { tvmaze: s.id } };
   }));
   return withEps.filter(c => c.title && c.imageUrl);
 }

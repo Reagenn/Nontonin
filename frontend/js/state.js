@@ -6,7 +6,23 @@
  * kandidat null/'' membiarkan field (dan snapshot field itu) apa adanya.
  */
 
-export const state = { items: [], activity: [], editingId: null, autoFilled: null, coverUrl: '', coverSource: '' };
+export const state = {
+  items: [],
+  activity: [],
+  releaseCalendar: null,
+  releaseLoading: false,
+  releaseError: '',
+  reminderNotice: '',
+  reminderNoticeError: false,
+  editingId: null,
+  autoFilled: null,
+  coverUrl: '',
+  coverSource: '',
+  externalRefs: {},
+  externalRefTitle: '',
+  externalRefCategory: '',
+  formReminderOriginal: null,
+};
 
 export function applyCandidate(current, autoFilled, cand) {
   const fields = ['title', 'genre', 'year', 'totalUnits', 'author'];

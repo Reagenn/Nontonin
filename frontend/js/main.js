@@ -10,6 +10,7 @@ import { loadAll } from './render.js';
 import { renderGrid } from './render-items.js';
 import { openDetail, toggleUnit, setTier } from './render-detail.js';
 import { openForm, updateCoverHint, searchCover, saveForm, deleteCurrent } from './forms.js';
+import { initReleaseCalendar } from './releases.js';
 
 if (typeof window !== 'undefined') window.applyCandidate = applyCandidate;
 
@@ -58,4 +59,5 @@ $('#btn-random').addEventListener('click', () => {
 
 // ---------- Init ----------
 if (window.location.protocol === 'file:') document.getElementById('file-warning').hidden = false;
+initReleaseCalendar();
 loadAll().catch(e => { document.getElementById('grid').innerHTML = '<p class="error">Gagal memuat data: ' + esc(e.message) + '</p>'; });

@@ -34,6 +34,23 @@
 </header>
 <main class="wrap">
   <section id="stats" class="stats" aria-label="Statistik koleksi"></section>
+  <section class="card release-card" aria-labelledby="release-title">
+    <div class="release-header">
+      <div>
+        <p class="release-kicker">Jadwal koleksimu</p>
+        <h2 id="release-title">Kalender Rilis</h2>
+        <p class="muted">Episode berikutnya untuk Anime dan Drama tersimpan, dari TVMaze dan Shikimori.</p>
+      </div>
+      <div class="release-actions">
+        <button id="btn-enable-notifications" class="btn secondary" type="button">Aktifkan notifikasi</button>
+        <button id="btn-refresh-releases" class="btn secondary" type="button">Perbarui jadwal</button>
+      </div>
+    </div>
+    <div id="release-status" class="release-summary" aria-live="polite"></div>
+    <div id="release-calendar-list" aria-busy="false"></div>
+    <p id="release-reminder-status" class="release-reminder-status muted" aria-live="polite"></p>
+    <p class="release-attribution muted">Data jadwal: <a href="https://www.tvmaze.com" target="_blank" rel="noopener">TVMaze</a> dan <a href="https://shikimori.one" target="_blank" rel="noopener">Shikimori</a>. Waktu ditampilkan mengikuti zona waktu perangkatmu.</p>
+  </section>
   <section class="card">
     <h2>Tier List Kamu</h2>
     <p class="muted">Cover dikelompokkan per Tier, dari S sampai D. Klik cover untuk membuka detail.</p>
@@ -128,6 +145,10 @@
         <div class="field"><label for="in-link">Link tempat nonton / baca</label><input id="in-link" type="url" placeholder="https://…"></div>
         <div class="field"><label for="in-status">Status</label>
           <select id="in-status"><option>Berlangsung</option><option>Rencana</option><option>Selesai</option><option>Jeda</option><option>Berhenti</option></select>
+        </div>
+        <div class="field"><label for="in-release-reminder">Pengingat episode</label>
+          <select id="in-release-reminder"><option value="">Nonaktif</option><option value="0">Saat tayang</option><option value="15">15 menit sebelumnya</option><option value="60">1 jam sebelumnya</option><option value="1440">1 hari sebelumnya</option><option value="10080">7 hari sebelumnya</option></select>
+          <span id="release-reminder-hint" class="muted">Berlaku untuk Anime dan Drama saat jadwal tersedia.</span>
         </div>
         <div class="field"><label for="in-tier">Tier / Rank</label>
           <select id="in-tier"><option value="">— Tidak ada —</option><option>S</option><option>A</option><option>B</option><option>C</option><option>D</option></select>

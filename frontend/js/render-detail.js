@@ -43,7 +43,7 @@ export async function toggleUnit(id, unit) {
 export async function setTier(id, tier) {
   const it = state.items.find(x => x.id === id); if (!it) return;
   const next = it.tier === tier ? null : tier;
-  const r = await api('/api/items/' + id, { method: 'PUT', body: JSON.stringify({ ...it, tier: next }) });
+  const r = await api('/api/items/' + id, { method: 'PUT', body: JSON.stringify({ tier: next }) });
   const idx = state.items.findIndex(x => x.id === id);
   if (idx >= 0) state.items[idx] = r.item;
   render(); openDetail(id);

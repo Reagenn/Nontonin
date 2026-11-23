@@ -1,6 +1,6 @@
 'use strict';
 /**
- * Nontonin v2.2.0 — Watchlist & Reading Tracker (local copy)
+ * Nontonin v2.3.0 — Watchlist & Reading Tracker (local copy)
  * Entry point tipis: hanya memuat data, lalu menjalankan server HTTP.
  * Routing ada di ./router.js, logika di ./state.js, ./coverSources.js,
  * ./covers.js, dan ./routes/. Zero npm dependencies, Node.js >= 18.
@@ -25,7 +25,7 @@ server.on('error', (err) => {
 
 loadData().then(() => {
   server.listen(PORT, () => {
-    console.log('Nontonin v2.2.0 jalan di http://localhost:' + PORT);
+    console.log('Nontonin v2.3.0 jalan di http://localhost:' + PORT);
     console.log('Data tersimpan di backend/data/data.json');
     console.log('Tekan Ctrl+C untuk berhenti.');
   });

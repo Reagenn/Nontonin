@@ -71,4 +71,47 @@ input[type=checkbox]{width:auto}
 .file-warning{background:#7f1d1d;color:#fff;padding:12px 20px;font-size:14px}
 .upload{cursor:pointer;border:1px dashed #3a4152;border-radius:8px;padding:9px 12px;display:inline-block}
 .detail-cover{width:180px;max-width:100%;border-radius:12px}
-@media(max-width:640px){.grid2{grid-template-columns:1fr}.topbar{padding:16px}}
+.release-card{position:relative;overflow:hidden;background:linear-gradient(145deg,#171a21 0%,#151c2b 100%);border-color:#344361}
+.release-card:before{content:"";position:absolute;width:260px;height:260px;right:-120px;top:-150px;border-radius:50%;background:rgba(37,99,235,.16);pointer-events:none}
+.release-header{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.release-header h2{margin:0 0 2px}
+.release-header p{margin:0}
+.release-actions{display:flex;gap:8px;flex-wrap:wrap}
+.release-kicker{color:#8ab4ff;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+.release-summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0 10px;min-height:28px}
+.release-pill{display:inline-flex;gap:4px;align-items:center;padding:4px 9px;border:1px solid #344361;border-radius:999px;background:#111827;color:#cbd5e1;font-size:12px}
+.release-pill b{color:#fff}
+.release-pill-error{border-color:#7f1d1d;color:#fca5a5}
+.release-updated{margin-left:auto;color:#7f8aa3;font-size:12px}
+.release-day{margin-top:14px}
+.release-day h3{margin:0 0 8px;color:#cbd5e1;font-size:13px;text-transform:capitalize}
+.release-events{display:flex;flex-direction:column;gap:8px}
+.release-event{display:grid;grid-template-columns:76px 50px minmax(0,1fr);gap:12px;align-items:center;padding:11px;border:1px solid #29364f;border-radius:10px;background:rgba(10,14,23,.7)}
+.release-event.reminder-due{border-color:#258653;box-shadow:inset 3px 0 #22c55e}
+.release-time{display:flex;flex-direction:column;align-items:flex-start}
+.release-time b{color:#bfdbfe;font-size:16px}
+.release-time span{color:#6f7c95;font-size:10px}
+.release-event-cover{width:50px;height:66px;object-fit:cover;border-radius:7px;background:#222}
+.release-cover-empty{border:1px dashed #3a4152}
+.release-event-body{min-width:0}
+.release-title-button{display:block;max-width:100%;border:0;padding:0;background:none;color:#fff;font:inherit;font-size:15px;font-weight:750;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.release-title-button:hover{color:#8ab4ff}
+.release-episode{margin-top:2px;color:#d7dce7;font-size:13px}
+.release-episode span{color:#9ba6ba}
+.release-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:7px;font-size:11px}
+.release-countdown{padding:2px 7px;border-radius:5px;background:#163d2a;color:#86efac;font-weight:700}
+.release-source{padding:2px 7px;border-radius:5px;background:#1e3157;text-decoration:none}
+.release-match{color:#7f8aa3}
+.release-due{color:#86efac;font-weight:700}
+.release-reminder{display:flex;align-items:center;gap:7px;margin-top:8px;color:#8e99ad;font-size:11px}
+.release-reminder select{width:auto;min-width:150px;padding:4px 7px;font-size:11px}
+.release-reminder-status{margin:12px 0 0}
+.release-warning{margin:8px 0;padding:8px 10px;border-left:3px solid #f59e0b;background:#2b2416;color:#fcd34d;font-size:12px}
+.release-empty{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:24px;border:1px dashed #344361;border-radius:10px;color:#cbd5e1}
+.release-empty span{color:#8e99ad;font-size:13px}
+.release-attribution{margin:12px 0 0}
+.release-loading{display:grid;gap:8px}
+.release-loading i{display:block;height:72px;border-radius:10px;background:linear-gradient(90deg,#1c2433,#27344b,#1c2433);background-size:200% 100%;animation:release-pulse 1.4s infinite}
+@keyframes release-pulse{to{background-position:-200% 0}}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}.topbar{padding:16px}.release-actions{width:100%}.release-actions .btn{flex:1}.release-updated{width:100%;margin-left:0}.release-event{grid-template-columns:64px 46px minmax(0,1fr);gap:9px}.release-event-cover{width:46px;height:62px}.release-time b{font-size:14px}}
+@media(max-width:440px){.release-event{grid-template-columns:58px minmax(0,1fr)}.release-event-cover{display:none}}
